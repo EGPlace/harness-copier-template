@@ -113,6 +113,8 @@ apply, and the post-gen hook re-runs idempotently.
 ```
 harness-copier-template/
 ├─ copier.yml         # Questions + engine config
+├─ docs/
+│  └─ harness-engineering-report.md  # Source report this template implements
 ├─ hooks/
 │  └─ post_gen.py     # Idempotent .gitignore merge + symlink creation
 ├─ template/          # _subdirectory = "template"; everything below is rendered
