@@ -1,7 +1,8 @@
 # AI agent harness — Copier template
 
-A [Copier](https://copier.readthedocs.io/) template that scaffolds the
-**agent-agnostic harness** described in Proposal A: an `AGENTS.md`-rooted
+A [Copier](https://copier.readthedocs.io/) template that scaffolds an
+**agent-agnostic harness** based on standard practices from multiple
+respected sources as of mid-2026. The harness is an `AGENTS.md`-rooted
 repository layout with a thin Claude Code + OpenCode overlay enabled by
 default, and everything else (Cursor, GitHub Copilot, MCP, example
 ADR/skill/subagent, Claude hooks) opt-in.
