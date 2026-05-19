@@ -1,0 +1,247 @@
+# Copier template: AI coding agent harness (Proposal A)
+#
+# Renders an agent-agnostic, AGENTS.md-rooted repository harness with a thin
+# Claude Code + OpenCode overlay enabled by default. Everything else (Cursor,
+# GitHub Copilot, MCP, example ADR/skill/subagent, Claude Code hooks) is
+# opt-in via the questions below.
+#
+# Usage:
+#   Greenfield: copier copy gh:your-org/harness-copier-template ./my-new-repo
+#   Brownfield: cd existing-repo && copier copy gh:your-org/harness-copier-template .
+#   Update:     cd repo && copier update
+#
+# Brown-field safety: README.md, Makefile, and .gitignore are protected via
+# _skip_if_exists. Copier will leave the existing file in place and you can
+# diff/merge the template version manually if needed.
+
+# ---------------------------------------------------------------------------
+# Copier engine settings
+# ---------------------------------------------------------------------------
+_min_copier_version: "9.4.0"
+_templates_suffix: ".jinja"
+_subdirectory: "template"
+_answers_file: ".copier-answers.yml"
+
+# Sensitive files that must never be silently overwritten in brown-field repos.
+# Copier compares the destination against this list; if a path matches and the
+# file already exists at the destination, it is skipped entirely (no prompt).
+_skip_if_exists:
+  - "README.md"
+  - "Makefile"
+  - ".gitignore"
+  - ".mcp.json"
+  - "docs/architecture.md"
+  - "docs/style.md"
+  - "docs/testing.md"
+
+# Optional post-generation tasks. The brown-field merger hook (see hooks/) runs
+# unconditionally and appends gitignore entries idempotently when an existing
+# .gitignore was preserved.
+_tasks:
+  - "python {{ _copier_conf.src_path }}/hooks/post_gen.py"
+
+# Files we never want copied to the destination
+_exclude:
+  - "copier.yml"
+  - "copier.yaml"
+  - ".copier-template"
+  - "~*"
+  - "*.py[co]"
+  - "__pycache__"
+  - ".git"
+  - ".DS_Store"
+  - "hooks"
+  - "README.template.md"
+
+# ---------------------------------------------------------------------------
+# Questions (minimum set)
+# ---------------------------------------------------------------------------
+
+mode:
+  type: str
+  help: |
+    Project mode. Greenfield = new repo (full scaffolding including README,
+    Makefile, .gitignore). Brownfield = existing repo (sensitive files are
+    skipped if they exist; agent files are added alongside).
+  default: greenfield
+  choices:
+    - greenfield
+    - brownfield
+
+project_name:
+  type: str
+  help: "Human-readable project name (e.g. 'Acme Billing Service')"
+  placeholder: "My Project"
+  validator: >-
+    {% if not project_name %}Project name cannot be empty.{% endif %}
+
+project_slug:
+  type: str
+  help: "Short slug (lowercase, dashes, no spaces; used in headings)"
+  default: "{{ project_name | lower | replace(' ', '-') | replace('_', '-') }}"
+  validator: >-
+    {% if not (project_slug | regex_search('^[a-z0-9][a-z0-9-]*$')) %}
+    Slug must be lowercase letters, digits, and dashes only.
+    {% endif %}
+
+project_description:
+  type: str
+  help: "One-sentence description of the project"
+  placeholder: "A service that does X for Y."
+
+primary_language:
+  type: str
+  help: "Primary programming language (drives sensible defaults for commands)"
+  default: python
+  choices:
+    - python
+    - typescript
+    - javascript
+    - rust
+    - go
+    - java
+    - csharp
+    - cpp
+    - other
+
+package_manager:
+  type: str
+  help: "Package / build manager (default is picked from primary_language)"
+  default: >-
+    {%- if primary_language == 'python' -%}uv
+    {%- elif primary_language in ['typescript', 'javascript'] -%}pnpm
+    {%- elif primary_language == 'rust' -%}cargo
+    {%- elif primary_language == 'go' -%}go
+    {%- elif primary_language == 'java' -%}gradle
+    {%- elif primary_language == 'csharp' -%}dotnet
+    {%- elif primary_language == 'cpp' -%}cmake
+    {%- else -%}make
+    {%- endif -%}
+  choices:
+    - uv
+    - pip
+    - poetry
+    - pdm
+    - hatch
+    - conda
+    - pnpm
+    - npm
+    - yarn
+    - bun
+    - cargo
+    - go
+    - gradle
+    - maven
+    - dotnet
+    - cmake
+    - meson
+    - bazel
+    - make
+    - other
+
+test_command:
+  type: str
+  help: "Command that runs the fast test suite (will be wired into 'make test')"
+  default: >-
+    {%- if primary_language == 'python' and package_manager == 'uv' -%}uv run pytest -q
+    {%- elif primary_language == 'python' -%}pytest -q
+    {%- elif primary_language in ['typescript', 'javascript'] -%}{{ package_manager }} test
+    {%- elif primary_language == 'rust' -%}cargo test
+    {%- elif primary_language == 'go' -%}go test ./...
+    {%- elif primary_language == 'java' and package_manager == 'gradle' -%}./gradlew test
+    {%- elif primary_language == 'java' -%}mvn test
+    {%- elif primary_language == 'csharp' -%}dotnet test
+    {%- elif primary_language == 'cpp' -%}ctest --output-on-failure
+    {%- else -%}echo 'TODO: configure test_command in copier.yml'
+    {%- endif -%}
+
+lint_command:
+  type: str
+  help: "Command that runs static checks (will be wired into 'make lint')"
+  default: >-
+    {%- if primary_language == 'python' and package_manager == 'uv' -%}uv run ruff check .
+    {%- elif primary_language == 'python' -%}ruff check .
+    {%- elif primary_language in ['typescript', 'javascript'] -%}{{ package_manager }} run lint
+    {%- elif primary_language == 'rust' -%}cargo clippy --all-targets -- -D warnings
+    {%- elif primary_language == 'go' -%}go vet ./... && golangci-lint run
+    {%- elif primary_language == 'java' and package_manager == 'gradle' -%}./gradlew check
+    {%- elif primary_language == 'java' -%}mvn verify -DskipTests
+    {%- elif primary_language == 'csharp' -%}dotnet format --verify-no-changes
+    {%- elif primary_language == 'cpp' -%}cmake --build build --target lint
+    {%- else -%}echo 'TODO: configure lint_command in copier.yml'
+    {%- endif -%}
+
+fmt_command:
+  type: str
+  help: "Command that auto-formats code (will be wired into 'make fmt')"
+  default: >-
+    {%- if primary_language == 'python' and package_manager == 'uv' -%}uv run ruff format .
+    {%- elif primary_language == 'python' -%}ruff format .
+    {%- elif primary_language in ['typescript', 'javascript'] -%}{{ package_manager }} run format
+    {%- elif primary_language == 'rust' -%}cargo fmt
+    {%- elif primary_language == 'go' -%}gofmt -w .
+    {%- elif primary_language == 'java' and package_manager == 'gradle' -%}./gradlew spotlessApply
+    {%- elif primary_language == 'java' -%}mvn spotless:apply
+    {%- elif primary_language == 'csharp' -%}dotnet format
+    {%- elif primary_language == 'cpp' -%}cmake --build build --target format
+    {%- else -%}echo 'TODO: configure fmt_command in copier.yml'
+    {%- endif -%}
+
+license:
+  type: str
+  help: "License identifier (SPDX); used only in the rendered docs"
+  default: "Apache-2.0"
+  choices:
+    - Apache-2.0
+    - MIT
+    - BSD-3-Clause
+    - GPL-3.0-only
+    - MPL-2.0
+    - Proprietary
+    - Other
+
+# ---------------------------------------------------------------------------
+# Optional modules (gated; everything off-by-default except Claude + OpenCode)
+# ---------------------------------------------------------------------------
+
+cursor:
+  type: bool
+  help: "Generate .cursor/rules/project-context.mdc for Cursor users?"
+  default: false
+
+copilot:
+  type: bool
+  help: "Generate .github/copilot-instructions.md (one-line redirect to AGENTS.md)?"
+  default: false
+
+mcp:
+  type: bool
+  help: "Generate a starter .mcp.json (with example commented-out servers)?"
+  default: false
+
+include_example_adr:
+  type: bool
+  help: "Include the seed ADR 0001-record-architecture-decisions.md?"
+  default: true
+
+include_example_skill:
+  type: bool
+  help: "Include the example 'verify' skill under .agents/skills/verify/?"
+  default: true
+
+include_example_subagent:
+  type: bool
+  help: "Include the example 'explorer' read-only subagent?"
+  default: true
+
+include_claude_hooks:
+  type: bool
+  help: |
+    Include Claude Code hooks in .claude/settings.json (auto-format on edit,
+    block destructive bash, run 'make verify' on Stop)? Requires `jq` on PATH.
+  default: true
+
+include_example_spec:
+  type: bool
+  help: "Include a stub specs/<date>-example/ directory with spec/plan/tasks templates?"
+  default: false

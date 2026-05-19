@@ -1,0 +1,13 @@
+---
+description: ""
+alwaysApply: true
+globs:
+---
+# Project context
+
+This project follows the conventions in `AGENTS.md` at the repository root.
+Read `AGENTS.md` before any task. See @AGENTS.md.
+
+Architecture: @docs/architecture.md
+Style: @docs/style.md
+Testing: @docs/testing.md
