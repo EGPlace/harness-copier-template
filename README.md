@@ -140,7 +140,8 @@ Copier drops the file/dir.
 ## Provenance
 
 This template implements **Proposal A** from the *Harness Engineering for AI
-Coding Agents* report, which synthesises practice as of mid-2026 from:
+Coding Agents in 2025–2026* report ([`docs/harness-engineering-report.md`](docs/harness-engineering-report.md)),
+which synthesises practice as of mid-2026 from:
 
 - Anthropic Claude Code docs and engineering blog
 - OpenAI Codex `AGENTS.md` spec (agents.md, donated to the Linux Foundation
