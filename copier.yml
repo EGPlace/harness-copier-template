@@ -124,6 +124,7 @@ package_manager:
     - pdm
     - hatch
     - conda
+    - pixi
     - pnpm
     - npm
     - yarn
@@ -144,6 +145,7 @@ test_command:
   help: "Command that runs the fast test suite (will be wired into 'make test')"
   default: >-
     {%- if primary_language == 'python' and package_manager == 'uv' -%}uv run pytest -q
+    {%- elif primary_language == 'python' and package_manager == 'pixi' -%}pixi run test
     {%- elif primary_language == 'python' -%}pytest -q
     {%- elif primary_language in ['typescript', 'javascript'] -%}{{ package_manager }} test
     {%- elif primary_language == 'rust' -%}cargo test
@@ -160,6 +162,7 @@ lint_command:
   help: "Command that runs static checks (will be wired into 'make lint')"
   default: >-
     {%- if primary_language == 'python' and package_manager == 'uv' -%}uv run ruff check .
+    {%- elif primary_language == 'python' and package_manager == 'pixi' -%}pixi run lint
     {%- elif primary_language == 'python' -%}ruff check .
     {%- elif primary_language in ['typescript', 'javascript'] -%}{{ package_manager }} run lint
     {%- elif primary_language == 'rust' -%}cargo clippy --all-targets -- -D warnings
@@ -176,6 +179,7 @@ fmt_command:
   help: "Command that auto-formats code (will be wired into 'make fmt')"
   default: >-
     {%- if primary_language == 'python' and package_manager == 'uv' -%}uv run ruff format .
+    {%- elif primary_language == 'python' and package_manager == 'pixi' -%}pixi run fmt
     {%- elif primary_language == 'python' -%}ruff format .
     {%- elif primary_language in ['typescript', 'javascript'] -%}{{ package_manager }} run format
     {%- elif primary_language == 'rust' -%}cargo fmt
