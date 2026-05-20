@@ -65,7 +65,7 @@ The template asks you:
 | `test_command`            | Wired into the task runner's `test` target               |
 | `lint_command`            | Wired into the task runner's `lint` target               |
 | `fmt_command`             | Wired into the task runner's `fmt` target                |
-| `task_runner`             | `make` \| `just` \| `none` — no default, pick explicitly |
+| `task_runner`             | `make` (default) \| `just` \| `none`                     |
 | `verify_command`          | What hooks and `/verify` run; default `./scripts/verify.sh` |
 | `generate_verify_script`  | Generate `scripts/verify.sh`; default `true`             |
 | `license`                 | SPDX id                                                  |
@@ -151,11 +151,13 @@ Copier drops the file/dir.
 
 ## Choosing a task runner
 
-`task_runner` is asked with no default — pick the one that matches how your
-team already runs tasks:
+`task_runner` defaults to `make` — the universal choice the source report
+recommends. Pick a different value if it matches how your team already runs
+tasks:
 
-- **`make`** — generate a `Makefile`. Universal toolchain, no extra install.
-  Recommended when the project doesn't already have its own task runner.
+- **`make`** (default) — generate a `Makefile`. Universal toolchain, no
+  extra install. Recommended when the project doesn't already have its own
+  task runner.
 - **`just`** — generate a `justfile` ([just.systems](https://just.systems/)).
   Cleaner syntax, no tab-sensitivity. Requires `just` on PATH.
 - **`none`** — generate neither. Use this for projects whose package /

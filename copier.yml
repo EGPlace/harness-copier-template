@@ -207,7 +207,7 @@ task_runner:
               provides task management (pixi tasks, hatch scripts, pnpm
               scripts, cargo aliases, etc.). Agent docs will reference the
               raw test/lint/fmt/verify commands directly.
-    No default — pick explicitly so the harness matches your toolchain.
+  default: make
   choices:
     - make
     - just
