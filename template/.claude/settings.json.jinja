@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": {{ ("INPUT=$(cat); [ \"$(echo $INPUT | jq -r '.stop_hook_active // false')\" = 'true' ] && exit 0; " ~ cmd('verify') ~ " || exit 2") | tojson }}
+            "command": {{ ("INPUT=$(cat); [ \"$(printf '%s' \"$INPUT\" | jq -r '.stop_hook_active // false')\" = 'true' ] && exit 0; " ~ cmd('verify') ~ " || exit 2") | tojson }}
           }
         ]
       }
