@@ -1,5 +1,8 @@
 {#-
-  Shared rendering macros. Excluded from output via _exclude in copier.yml.
+  Shared rendering macros. This file lives at the repository root, outside
+  the _subdirectory ("template/"), so Copier never renders it into the
+  output tree. It is NOT in _exclude — that would risk breaking Jinja's
+  template loader, which must be able to resolve `{% from '_macros.jinja' %}`.
 
   Import from any template like:
       {% from '_macros.jinja' import cmd %}

@@ -172,8 +172,12 @@ def main() -> int:
         verify_invocation = "make verify"
     elif task_runner == "just":
         verify_invocation = "just verify"
-    else:
+    elif task_runner == "none":
         verify_invocation = _read_answer("verify_command", "./scripts/verify.sh")
+    else:
+        # Unknown task_runner value (e.g. manual edit with wrong casing): fall
+        # back to the template default rather than printing verify_command raw.
+        verify_invocation = "make verify"
     print("Next steps:")
     print("  1. Open AGENTS.md and tighten it for your project (target ≤200 lines).")
     print(f"  2. Run `{verify_invocation}` to confirm the toolchain wiring.")
