@@ -22,7 +22,9 @@ your-repo/
 │  ├─ testing.md
 │  └─ adr/0001-record-architecture-decisions.md   # if include_example_adr
 ├─ specs/                            # per-feature; YYYY-MM-example/ if opted in
-├─ scripts/verify.sh                 # what Stop hook runs (if generate_verify_script)
+├─ scripts/                          # shell entry points (if generate_scripts)
+│  ├─ verify.sh                      # canonical lint+test gate (what Stop hook runs)
+│  └─ fmt-file.sh                    # per-file formatter slot for the PostToolUse hook
 ├─ .agents/                          # vendor-neutral shared assets
 │  ├─ skills/verify/SKILL.md         # if include_example_skill
 │  └─ subagents/explorer.md          # if include_example_subagent
@@ -67,7 +69,7 @@ The template asks you:
 | `fmt_command`             | Wired into the task runner's `fmt` target                |
 | `task_runner`             | `make` (default) \| `just` \| `none`                     |
 | `verify_command`          | What hooks and `/verify` run; default `./scripts/verify.sh` |
-| `generate_verify_script`  | Generate `scripts/verify.sh`; default `true`             |
+| `generate_scripts`        | Generate `scripts/` placeholders (`verify.sh`, `fmt-file.sh`); default `true` |
 | `license`                 | SPDX id                                                  |
 | `cursor`                  | Off by default                                           |
 | `copilot`                 | Off by default                                           |
@@ -170,8 +172,11 @@ tasks:
   pointed at your existing pipeline.
 
 The `verify_command` answer (default `./scripts/verify.sh`) is what the
-Claude Code Stop hook and the `/verify` slash command invoke; `scripts/verify.sh`
-itself is generated only when `generate_verify_script=true`.
+Claude Code Stop hook and the `/verify` slash command invoke. The
+`scripts/` folder itself — including the default `verify.sh` and the
+`fmt-file.sh` slot that the PostToolUse hook discovers — is generated
+only when `generate_scripts=true`. If you disable it, make sure
+`verify_command` points at a gate that does exist (e.g. `pixi run verify`).
 
 ## Provenance
 

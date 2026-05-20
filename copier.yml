@@ -222,14 +222,21 @@ verify_command:
     this to e.g. 'pixi run verify' or 'hatch run verify'.
   default: "./scripts/verify.sh"
 
-generate_verify_script:
+generate_scripts:
   type: bool
   help: |
-    Generate scripts/verify.sh (the canonical lint+test runner invoked by
-    'make verify' / 'just verify' and by the Claude Code Stop hook)?
-    Independent of task_runner: pick task_runner=none but keep the script
-    if you still want a single shell entry point, or pick make/just but
-    skip the script if verify_command points at a project-native pipeline.
+    Generate the scripts/ folder with placeholders for the shell entry
+    points the harness expects to be able to invoke:
+      - scripts/verify.sh    canonical lint+test gate; what verify_command
+                             points at by default and what `make verify` /
+                             `just verify` invoke.
+      - scripts/fmt-file.sh  per-file formatter discovered by the Claude
+                             Code PostToolUse hook (already wired with a
+                             `test -x` guard, so an absent file no-ops).
+    Independent of task_runner: keep these scripts even with
+    task_runner=none if you want a single shell-script entry point, or
+    skip them when task_runner=make/just but verify_command points at a
+    project-native pipeline (e.g. `pixi run verify`).
   default: true
 
 license:
@@ -296,10 +303,10 @@ include_example_spec:
 # Post-generation message — warn about inconsistent answer combinations.
 # ---------------------------------------------------------------------------
 _message_after_copy: |
-  {% if not generate_verify_script and verify_command == './scripts/verify.sh' -%}
-  WARNING: generate_verify_script=false but verify_command still points at
+  {% if not generate_scripts and verify_command == './scripts/verify.sh' -%}
+  WARNING: generate_scripts=false but verify_command still points at
   './scripts/verify.sh', which will not exist. Either re-run with
-  generate_verify_script=true, or set verify_command to your project's
+  generate_scripts=true, or set verify_command to your project's
   own gate (e.g. 'pixi run verify', 'hatch run verify').
   {%- endif %}
   {% if task_runner == 'none' -%}

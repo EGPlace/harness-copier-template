@@ -763,3 +763,12 @@ list is rendered from a single shared Jinja macro
 `{% from '_macros.jinja' import ... %}` without a `template/` prefix)
 so that all surfaces stay consistent with the
 chosen runner.
+
+A companion boolean `generate_scripts` (default `true`) controls whether
+the template populates `scripts/` with placeholders for the harness's
+shell entry points. The current set is `verify.sh` (the canonical
+lint+test gate; what `verify_command` defaults to) and `fmt-file.sh`
+(the per-file formatter slot the Claude Code `PostToolUse` hook already
+discovers via `test -x`). The set is expected to grow as more harness
+slots emerge; the toggle is independent of `task_runner` so projects
+with their own native verify pipeline can disable it entirely.

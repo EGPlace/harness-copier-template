@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# fmt-file.sh — per-file formatter, invoked by the Claude Code
+# PostToolUse hook after Write/Edit/MultiEdit with the edited file as $1.
+# Keep this fast (<300ms); it runs on every save.
+#
+# TODO: replace the no-op below with your project's per-file formatter.
+# Examples:
+#   uv run ruff format "$1"
+#   pnpm exec prettier --write "$1"
+#   gofmt -w "$1"
+#   cargo fmt -- "$1"
+
+set -euo pipefail
+
+file="${1:-}"
+[[ -z "$file" ]] && { echo "usage: $0 <file>" >&2; exit 64; }
+
+echo "fmt-file.sh: no formatter configured for $file (placeholder)" >&2
+exit 0
