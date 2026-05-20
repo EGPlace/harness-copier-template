@@ -23,7 +23,7 @@ your-repo/
 │  └─ adr/0001-record-architecture-decisions.md   # if include_example_adr
 ├─ specs/                            # per-feature; YYYY-MM-example/ if opted in
 ├─ scripts/                          # shell entry points (if generate_scripts)
-│  ├─ verify.sh                      # canonical lint+test gate (what Stop hook runs)
+│  ├─ verify.sh                      # default implementation of verify_command (canonical lint+test gate)
 │  └─ fmt-file.sh                    # per-file formatter slot for the PostToolUse hook
 ├─ .agents/                          # vendor-neutral shared assets
 │  ├─ skills/verify/SKILL.md         # if include_example_skill

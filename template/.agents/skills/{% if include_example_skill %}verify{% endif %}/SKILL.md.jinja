@@ -34,7 +34,7 @@ description: |
 - The `Stop` hook in `.claude/settings.json` already runs `{{ cmd('verify') }}`.
   This skill is for the *interactive* case where the user wants verification
   before the agent's natural stop.
-{%- if generate_scripts %}
+{%- if verify_command == './scripts/verify.sh' %}
 - `verify.sh` exits with code 2 on failure (Stop-hook convention). Don't
   treat exit 2 as a different signal from exit 1 — both mean "fix it".
 {%- endif %}
