@@ -57,7 +57,11 @@ def _read_answer(key: str, default: str) -> str:
     value = data.get(key)
     if not isinstance(value, (str, int, float, bool)):
         return default
-    text = " ".join(str(value).split())
+    # Normalize newlines (block-scalar YAML values can contain them) to
+    # a single space so the result fits inside backticks in stdout.
+    # Preserve other whitespace — internal multiple spaces or tabs may
+    # be intentional inside a quoted verify_command argument.
+    text = str(value).replace("\r\n", " ").replace("\n", " ").replace("\r", " ").strip()
     return text or default
 
 
