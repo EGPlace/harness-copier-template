@@ -34,8 +34,11 @@ def _read_answer(key: str, default: str) -> str:
 
     Uses PyYAML (already a Copier dependency, so always available when this
     script is invoked by the Copier engine) so quoted strings, inline
-    comments, and block scalars all parse correctly. Falls back to ``default``
-    if the file is missing, the key is absent, or the value is empty.
+    comments, and block scalars all parse correctly. Returns ``default``
+    if the file is missing, malformed, or the key resolves to anything
+    other than a string/int/float/bool. Block scalars are accepted; any
+    internal whitespace is collapsed so the result remains a single
+    printable line (the caller renders it inside backticks).
     """
     answers = CWD / ".copier-answers.yml"
     if not answers.exists():
@@ -44,11 +47,17 @@ def _read_answer(key: str, default: str) -> str:
         import yaml
     except ImportError:
         return default
-    data = yaml.safe_load(answers.read_text(encoding="utf-8")) or {}
-    value = data.get(key)
-    if value is None:
+    try:
+        data = yaml.safe_load(answers.read_text(encoding="utf-8"))
+    except yaml.YAMLError:
         return default
-    return str(value) or default
+    if not isinstance(data, dict):
+        return default
+    value = data.get(key)
+    if not isinstance(value, (str, int, float, bool)):
+        return default
+    text = " ".join(str(value).split())
+    return text or default
 
 
 GITIGNORE_BEGIN = "# >>> ai-agent-harness (managed by copier) >>>"
@@ -143,10 +152,19 @@ def main() -> int:
     for m in messages:
         print(f"  - {m}")
     print()
-    verify_cmd = _read_answer("verify_command", "./scripts/verify.sh")
+    # Print the user-facing invocation, not just the raw verify_command,
+    # so the suggestion also exercises the generated Makefile/justfile
+    # wiring (and only falls back to verify_command for task_runner=none).
+    task_runner = _read_answer("task_runner", "none")
+    if task_runner == "make":
+        verify_invocation = "make verify"
+    elif task_runner == "just":
+        verify_invocation = "just verify"
+    else:
+        verify_invocation = _read_answer("verify_command", "./scripts/verify.sh")
     print("Next steps:")
     print("  1. Open AGENTS.md and tighten it for your project (target ≤200 lines).")
-    print(f"  2. Run `{verify_cmd}` to confirm the toolchain wiring.")
+    print(f"  2. Run `{verify_invocation}` to confirm the toolchain wiring.")
     print("  3. Commit and push; subsequent runs use `copier update`.")
     print()
     return 0

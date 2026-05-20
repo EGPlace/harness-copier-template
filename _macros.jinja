@@ -31,10 +31,16 @@ just {{ target }}
   usable, otherwise emit an empty (falsy) string. Use at call sites as
   `{% if has_cmd('test-all') %} … {% endif %}` — Jinja treats any
   non-empty string as truthy.
+
+  The known target sets mirror what the generated Makefile / justfile
+  actually define and what `cmd()` handles for `task_runner=none`. Keep
+  these tuples in sync if the runner files grow a new recipe.
 -#}
 {%- macro has_cmd(target) -%}
-{%- if task_runner in ('make', 'just') -%}yes
-{%- elif target in ('test', 'lint', 'fmt', 'verify') -%}yes
+{%- if task_runner in ('make', 'just')
+       and target in ('test', 'test-all', 'lint', 'fmt', 'verify', 'dev', 'clean') -%}yes
+{%- elif task_runner == 'none'
+       and target in ('test', 'lint', 'fmt', 'verify') -%}yes
 {%- endif -%}
 {%- endmacro -%}
 {#-
