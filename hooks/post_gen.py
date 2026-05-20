@@ -30,17 +30,21 @@ CWD = Path.cwd()
 
 
 def _read_answer(key: str, default: str) -> str:
-    """Read a single scalar value from .copier-answers.yml.
+    """Read a single string value from .copier-answers.yml.
 
     Uses PyYAML (already a Copier dependency, so always available when this
     script is invoked by the Copier engine) so quoted strings, inline
     comments, and block scalars all parse correctly. Returns ``default``
     if the file is missing, malformed, or the key resolves to anything
-    other than a string/int/float/bool. Block-scalar newlines are
-    collapsed to single spaces so the result fits on one line when
-    printed inside backticks; other internal whitespace (multiple
-    spaces, tabs) is preserved because it can be intentional inside a
-    quoted argument.
+    other than a string. We deliberately reject bool/int/float here
+    because YAML's implicit typing happily turns ``yes``/``no``/``on``/
+    ``off`` into booleans — and the only keys this helper is called on
+    (``task_runner``, ``verify_command``) are always strings, so any
+    other type indicates malformed answers and printing ``True`` as an
+    invocation would mislead. Block-scalar newlines are collapsed to
+    single spaces so the result fits on one line when printed inside
+    backticks; other internal whitespace (multiple spaces, tabs) is
+    preserved because it can be intentional inside a quoted argument.
     """
     answers = CWD / ".copier-answers.yml"
     if not answers.exists():
@@ -57,13 +61,13 @@ def _read_answer(key: str, default: str) -> str:
     if not isinstance(data, dict):
         return default
     value = data.get(key)
-    if not isinstance(value, (str, int, float, bool)):
+    if not isinstance(value, str):
         return default
     # Normalize newlines (block-scalar YAML values can contain them) to
     # a single space so the result fits inside backticks in stdout.
     # Preserve other whitespace — internal multiple spaces or tabs may
     # be intentional inside a quoted verify_command argument.
-    text = str(value).replace("\r\n", " ").replace("\n", " ").replace("\r", " ").strip()
+    text = value.replace("\r\n", " ").replace("\n", " ").replace("\r", " ").strip()
     return text or default
 
 
