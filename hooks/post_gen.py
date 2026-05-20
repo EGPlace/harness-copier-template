@@ -168,10 +168,8 @@ def main() -> int:
     # wiring (and only falls back to verify_command for task_runner=none).
     # Default matches copier.yml's default for the same answer.
     task_runner = _read_answer("task_runner", "make")
-    if task_runner == "make":
-        verify_invocation = "make verify"
-    elif task_runner == "just":
-        verify_invocation = "just verify"
+    if task_runner in ("make", "just"):
+        verify_invocation = f"{task_runner} verify"
     elif task_runner == "none":
         verify_invocation = _read_answer("verify_command", "./scripts/verify.sh")
     else:

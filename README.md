@@ -132,8 +132,8 @@ harness-copier-template/
 │  ├─ AGENTS.md.jinja
 │  ├─ CLAUDE.md.jinja
 │  ├─ README.md.jinja
-│  ├─ {% if task_runner == 'make' %}Makefile.jinja{% endif %}
-│  ├─ {% if task_runner == 'just' %}justfile.jinja{% endif %}
+│  ├─ {% if task_runner == 'make' %}Makefile{% endif %}.jinja
+│  ├─ {% if task_runner == 'just' %}justfile{% endif %}.jinja
 │  ├─ .gitignore.jinja
 │  ├─ docs/
 │  ├─ specs/
@@ -143,13 +143,17 @@ harness-copier-template/
 │  ├─ .opencode/
 │  ├─ {% if cursor %}.cursor{% endif %}/
 │  ├─ {% if copilot %}.github{% endif %}/
-│  └─ {% if mcp %}.mcp.json.jinja{% endif %}
+│  └─ {% if mcp %}.mcp.json{% endif %}
 └─ README.md          # this file
 ```
 
 Conditional dirs and files use Copier's standard Jinja-in-path technique:
 the path segment renders to an empty string when the gate is false, and
-Copier drops the file/dir.
+Copier drops the file/dir. Note that `.jinja` (the configured
+`_templates_suffix`) must stay **outside** the `{% if %}` block —
+Copier strips the suffix at file-name parsing time, before the Jinja-in-path
+condition is evaluated, so a path like `{% if x %}foo.jinja{% endif %}`
+would keep its literal `.jinja` extension in the output.
 
 ## Choosing a task runner
 
