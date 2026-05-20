@@ -30,21 +30,25 @@ CWD = Path.cwd()
 
 
 def _read_answer(key: str, default: str) -> str:
-    """Read a single scalar value from .copier-answers.yml without a YAML dep.
+    """Read a single scalar value from .copier-answers.yml.
 
-    The answers file is one ``key: value`` per line for the answers we care
-    about, so a naive line scan is enough and keeps this script stdlib-only.
+    Uses PyYAML (already a Copier dependency, so always available when this
+    script is invoked by the Copier engine) so quoted strings, inline
+    comments, and block scalars all parse correctly. Falls back to ``default``
+    if the file is missing, the key is absent, or the value is empty.
     """
     answers = CWD / ".copier-answers.yml"
     if not answers.exists():
         return default
-    for line in answers.read_text(encoding="utf-8").splitlines():
-        if line.startswith(f"{key}:"):
-            value = line.split(":", 1)[1].strip()
-            if (len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"')):
-                value = value[1:-1]
-            return value or default
-    return default
+    try:
+        import yaml
+    except ImportError:
+        return default
+    data = yaml.safe_load(answers.read_text(encoding="utf-8")) or {}
+    value = data.get(key)
+    if value is None:
+        return default
+    return str(value) or default
 
 
 GITIGNORE_BEGIN = "# >>> ai-agent-harness (managed by copier) >>>"

@@ -27,14 +27,14 @@ just {{ target }}
 {%- endif -%}
 {%- endmacro -%}
 {#-
-  has_cmd(target) — true if cmd(target) renders something usable. Use
-  this to guard prose that references task-runner-only targets (e.g.
-  `test-all`) when `task_runner=none`.
+  has_cmd(target) — emit a truthy string if cmd(target) renders something
+  usable, otherwise emit an empty (falsy) string. Use at call sites as
+  `{% if has_cmd('test-all') %} … {% endif %}` — Jinja treats any
+  non-empty string as truthy.
 -#}
 {%- macro has_cmd(target) -%}
-{%- if task_runner in ('make', 'just') -%}true
-{%- elif target in ('test', 'lint', 'fmt', 'verify') -%}true
-{%- else -%}{# render empty = falsy when compared to 'true' #}
+{%- if task_runner in ('make', 'just') -%}yes
+{%- elif target in ('test', 'lint', 'fmt', 'verify') -%}yes
 {%- endif -%}
 {%- endmacro -%}
 {#-

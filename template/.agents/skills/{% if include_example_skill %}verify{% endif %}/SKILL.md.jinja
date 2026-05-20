@@ -40,4 +40,4 @@ description: |
 {%- endif %}
 - On slow machines `{{ cmd('verify') }}` may exceed 60s. If that becomes
   routine, open an ADR to move slow suites to
-  {% if has_cmd('test-all') == 'true' %}`{{ cmd('test-all') }}`{% else %}a dedicated slow-suite command{% endif %} / CI.
+  {% if has_cmd('test-all') %}`{{ cmd('test-all') }}`{% else %}a dedicated slow-suite command{% endif %} / CI.
