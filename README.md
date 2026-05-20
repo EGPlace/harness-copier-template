@@ -157,4 +157,8 @@ which synthesises practice as of mid-2026 from:
 
 ## License
 
-Apache-2.0.
+[MIT](LICENSE).
+
+Note: this license covers the template repository itself. Projects generated
+from the template pick their own license via the `license` question
+(defaults to `Apache-2.0`).
