@@ -8,6 +8,9 @@
       "Bash(just:*)",
       {% elif task_runner == 'none' -%}
       {{ ('Bash(' ~ verify_command ~ ')') | tojson }},
+      {{ ('Bash(' ~ test_command ~ ')') | tojson }},
+      {{ ('Bash(' ~ lint_command ~ ')') | tojson }},
+      {{ ('Bash(' ~ fmt_command ~ ')') | tojson }},
       {% endif -%}
       "Bash(git status)",
       "Bash(git diff:*)",

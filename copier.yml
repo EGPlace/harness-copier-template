@@ -354,8 +354,8 @@ _message_after_copy: |
   Note: task_runner=none — no Makefile or justfile was generated. Agents
   will invoke the raw commands (test_command, lint_command, fmt_command,
   verify_command) directly. The generated .claude/settings.json and
-  .opencode/opencode.jsonc allow '{{ verify_command }}' exactly so the
-  Stop hook and /verify run without prompts. To also allow related
-  commands (e.g. other pixi/hatch tasks), add a broader wildcard entry
-  to both config files manually.
+  .opencode/opencode.jsonc allow each of those four commands exactly so
+  the agent loop runs without prompts. To also allow related commands
+  (e.g. other pixi/hatch tasks), add a broader wildcard entry to both
+  config files manually.
   {%- endif %}
