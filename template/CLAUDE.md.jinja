@@ -1,4 +1,5 @@
 @AGENTS.md
+{%- from 'template/_macros.jinja' import cmd with context %}
 
 # Claude Code specifics
 
@@ -11,12 +12,12 @@
   Be explicit: "use the explorer subagent to find where X is wired up".
 - **Slash commands** are under `.claude/commands/`: `/spec`, `/plan`, `/verify`.
 - **Hooks** in `.claude/settings.json` enforce: auto-format on Write/Edit,
-  block destructive bash, run `make verify` on Stop. They are deterministic
+  block destructive bash, run `{{ cmd('verify') }}` on Stop. They are deterministic
   and run outside your reasoning chain — don't try to work around them.
 
 # Working with this repo
 
-- Before claiming "done", run `/verify` (or `make verify` directly).
+- Before claiming "done", run `/verify` (or `{{ cmd('verify') }}` directly).
 - When you `/compact`, prefer `/compact <focus>` over bare `/compact` so the
   preserved context stays task-relevant.
 - Use `/clear` between unrelated tasks — context bleed degrades performance.

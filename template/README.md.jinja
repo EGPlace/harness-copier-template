@@ -1,14 +1,15 @@
 # {{ project_name }}
+{%- from 'template/_macros.jinja' import cmd with context %}
 
 {{ project_description }}
 
 ## Quickstart
 
 ```sh
-make test    # fast unit tests
-make lint    # static checks
-make fmt     # auto-format
-make verify  # full gate; what the agent runs before claiming done
+{{ cmd('test') }}    # fast unit tests
+{{ cmd('lint') }}    # static checks
+{{ cmd('fmt') }}     # auto-format
+{{ cmd('verify') }}  # full gate; what the agent runs before claiming done
 ```
 
 ## AI coding agents

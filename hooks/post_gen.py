@@ -28,6 +28,25 @@ from typing import Iterable
 
 CWD = Path.cwd()
 
+
+def _read_answer(key: str, default: str) -> str:
+    """Read a single scalar value from .copier-answers.yml without a YAML dep.
+
+    The answers file is one ``key: value`` per line for the answers we care
+    about, so a naive line scan is enough and keeps this script stdlib-only.
+    """
+    answers = CWD / ".copier-answers.yml"
+    if not answers.exists():
+        return default
+    for line in answers.read_text(encoding="utf-8").splitlines():
+        if line.startswith(f"{key}:"):
+            value = line.split(":", 1)[1].strip()
+            if (len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"')):
+                value = value[1:-1]
+            return value or default
+    return default
+
+
 GITIGNORE_BEGIN = "# >>> ai-agent-harness (managed by copier) >>>"
 GITIGNORE_END = "# <<< ai-agent-harness (managed by copier) <<<"
 
@@ -120,9 +139,10 @@ def main() -> int:
     for m in messages:
         print(f"  - {m}")
     print()
+    verify_cmd = _read_answer("verify_command", "./scripts/verify.sh")
     print("Next steps:")
     print("  1. Open AGENTS.md and tighten it for your project (target ≤200 lines).")
-    print("  2. Run `make verify` to confirm the toolchain wiring.")
+    print(f"  2. Run `{verify_cmd}` to confirm the toolchain wiring.")
     print("  3. Commit and push; subsequent runs use `copier update`.")
     print()
     return 0

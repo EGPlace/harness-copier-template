@@ -1,10 +1,11 @@
 # Testing strategy
+{%- from 'template/_macros.jinja' import cmd with context %}
 
 ## What the agent runs
 
-- **Pre-claim-done gate**: `make verify` (= `scripts/verify.sh`).
-- **Fast loop**: `make test` — must finish in <60s. Add slow suites under
-  `make test-all`.
+- **Pre-claim-done gate**: `{{ cmd('verify') }}`{% if generate_verify_script %} (= `scripts/verify.sh`){% endif %}.
+- **Fast loop**: `{{ cmd('test') }}` — must finish in <60s. Add slow suites under
+  `{{ cmd('test-all') }}`.
 
 ## Layering
 

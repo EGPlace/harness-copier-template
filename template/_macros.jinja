@@ -1,0 +1,35 @@
+{#-
+  Shared rendering macros. Excluded from output via _exclude in copier.yml.
+
+  Import from any template like:
+      {% from '_macros.jinja' import cmd %}
+
+  cmd(target) renders the user-facing command for a dev task. It resolves
+  to `make <target>`, `just <target>`, or the raw underlying command,
+  depending on the `task_runner` answer.
+-#}
+{%- macro cmd(target) -%}
+{%- if task_runner == 'make' -%}
+make {{ target }}
+{%- elif task_runner == 'just' -%}
+just {{ target }}
+{%- else -%}
+{%-   if target == 'test' -%}{{ test_command }}
+{%-   elif target == 'lint' -%}{{ lint_command }}
+{%-   elif target == 'fmt' -%}{{ fmt_command }}
+{%-   elif target == 'verify' -%}{{ verify_command }}
+{%-   elif target == 'test-all' -%}{{ test_command }}
+{%-   else -%}{{ target }}
+{%-   endif -%}
+{%- endif -%}
+{%- endmacro -%}
+{#-
+  runner_file_name() — human label for the file that defines the tasks,
+  used in prose like "fix the Makefile / justfile / underlying task definition".
+-#}
+{%- macro runner_file_name() -%}
+{%- if task_runner == 'make' -%}Makefile
+{%- elif task_runner == 'just' -%}justfile
+{%- else -%}underlying task definition
+{%- endif -%}
+{%- endmacro -%}

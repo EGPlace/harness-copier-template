@@ -17,7 +17,7 @@ fmt:  ## Auto-format the codebase
 	{{ fmt_command }}
 
 verify:  ## What the agent runs before claiming done
-	@./scripts/verify.sh
+	@{{ verify_command }}
 
 dev:  ## Run the local dev workflow (override per-project)
 	@echo "dev: override this target to start your dev server / watcher"

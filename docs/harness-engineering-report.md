@@ -728,3 +728,36 @@ The ordering matters. ADRs first because they're cheap and durable. Hooks early 
 - **Tool precedence rules differ subtly.** Cursor: Team → Project → User Rules, "earlier sources take precedence when guidance conflicts." Claude Code: more-specific wins, files merge. Codex: `AGENTS.override.md > AGENTS.md > TEAM_GUIDE.md > .agents.md` per directory. If you mix tools, validate with a small "what rules are active?" probe before trusting a layered setup.
 - **MCP cost-benefit is changing.** Anthropic's 15 Jun 2026 billing split makes third-party MCP usage explicitly metered, strengthening the case for plain-CLI tools whenever feasible.
 - **Don't underestimate Augment Code's data.** Slava Zhenylenko, *A good AGENTS.md is a model upgrade. A bad one is worse than no docs at all.* (Augment Code blog, 22 Apr 2026): *"The same file boosted best_practices by 25% on a routine bug fix and dropped completeness by 30% on a complex feature task in the same module."* Same AGENTS.md, opposite effects on different tasks. Plan to maintain it.
+
+## Addendum: task-runner flexibility
+
+The original report (§5, §6, §7) treats the `Makefile` as the canonical
+command interface for agents. That recommendation still stands as the
+default: `make` is universally installed, target syntax is stable across
+decades, and every agent CLI surveyed allow-lists `make *` without
+friction.
+
+This template now exposes a `task_runner` choice so that recommendation
+can be matched to the surrounding toolchain instead of forced onto it:
+
+- **`make`** (recommended default for projects without a native task
+  manager) — generates a `Makefile`. Matches the report's original
+  prescription verbatim.
+- **`just`** — generates a `justfile` (https://just.systems/). Same
+  ergonomics for agents (recipe targets, doc-comments via `just --list`),
+  cleaner authoring (no tab-sensitivity, comment syntax, variables).
+  Appropriate where contributors already have `just` on PATH.
+- **`none`** — generates neither. For projects whose package/project
+  manager already provides task management — **pixi** (`pixi run <task>`,
+  defined in `pixi.toml`), **hatch** (`hatch run <env:task>` from
+  `pyproject.toml`), pnpm scripts, cargo aliases, etc. The harness then
+  surfaces the raw `test_command` / `lint_command` / `fmt_command` /
+  `verify_command` answers to agents directly, and the Claude Code Stop
+  hook and `/verify` slash command invoke whatever `verify_command` was
+  set to (commonly `pixi run verify` or `hatch run verify`).
+
+The agent-facing wording in AGENTS.md, CLAUDE.md, README.md, the
+`/verify` slash command, the `verify` skill, and the OpenCode permission
+list is rendered from a single shared Jinja macro
+(`template/_macros.jinja`) so that all surfaces stay consistent with the
+chosen runner.

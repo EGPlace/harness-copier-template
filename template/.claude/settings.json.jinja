@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
+      {% if task_runner == 'make' -%}
       "Bash(make:*)",
+      {% elif task_runner == 'just' -%}
+      "Bash(just:*)",
+      {% endif -%}
       "Bash(git status)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -47,7 +51,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat); [ \"$(echo $INPUT | jq -r '.stop_hook_active // false')\" = 'true' ] && exit 0; make verify || exit 2"
+            "command": "INPUT=$(cat); [ \"$(echo $INPUT | jq -r '.stop_hook_active // false')\" = 'true' ] && exit 0; {{ verify_command }} || exit 2"
           }
         ]
       }
