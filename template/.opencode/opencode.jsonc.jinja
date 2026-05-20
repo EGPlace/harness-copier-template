@@ -23,7 +23,7 @@
       {% elif task_runner == 'just' -%}
       "just *": "allow",
       {% elif task_runner == 'none' -%}
-      "{{ verify_command.split()[0] }} *": "allow",
+      {{ verify_command | tojson }}: "allow",
       {% endif -%}
       "git status": "allow",
       "git diff*": "allow",

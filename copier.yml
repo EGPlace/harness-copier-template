@@ -249,7 +249,11 @@ verify_command:
     'hatch run verify'.
   default: "./scripts/verify.sh"
   validator: >-
-    {%- if '\n' in verify_command or '\r' in verify_command -%}
+    {%- if not verify_command.strip() -%}
+    verify_command cannot be empty — it is used as the Stop-hook command
+    and the default verify target. Set it to your verification gate
+    (e.g. './scripts/verify.sh' or 'pixi run verify').
+    {%- elif '\n' in verify_command or '\r' in verify_command -%}
     verify_command must be a single line — embedded newlines would let
     a multi-line value split into multiple shell commands inside the
     Stop hook. Use a shell wrapper or put the multi-step logic in
@@ -350,8 +354,8 @@ _message_after_copy: |
   Note: task_runner=none — no Makefile or justfile was generated. Agents
   will invoke the raw commands (test_command, lint_command, fmt_command,
   verify_command) directly. The generated .claude/settings.json and
-  .opencode/opencode.jsonc already allow '{{ verify_command.split()[0] }} *'
-  so verification runs without prompts. Review and broaden the rule if
-  you run other project-manager commands (e.g. 'pixi *', 'hatch *')
-  frequently.
+  .opencode/opencode.jsonc allow '{{ verify_command }}' exactly so the
+  Stop hook and /verify run without prompts. To also allow related
+  commands (e.g. other pixi/hatch tasks), add a broader wildcard entry
+  to both config files manually.
   {%- endif %}

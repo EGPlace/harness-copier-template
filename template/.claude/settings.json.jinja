@@ -7,7 +7,7 @@
       {% elif task_runner == 'just' -%}
       "Bash(just:*)",
       {% elif task_runner == 'none' -%}
-      "Bash({{ verify_command.split()[0] }}:*)",
+      {{ ('Bash(' ~ verify_command ~ ')') | tojson }},
       {% endif -%}
       "Bash(git status)",
       "Bash(git diff:*)",
