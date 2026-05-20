@@ -162,6 +162,12 @@ test_command:
     {%- elif primary_language == 'cpp' -%}ctest --output-on-failure
     {%- else -%}echo 'TODO: configure test_command in copier.yml'
     {%- endif -%}
+  validator: >-
+    {% if '\n' in test_command or '\r' in test_command %}
+    test_command must be a single line — embedded newlines would break
+    the generated Makefile/justfile recipe syntax. Use a shell wrapper
+    or a script instead.
+    {% endif %}
 
 lint_command:
   type: str
@@ -179,6 +185,12 @@ lint_command:
     {%- elif primary_language == 'cpp' -%}cmake --build build --target lint
     {%- else -%}echo 'TODO: configure lint_command in copier.yml'
     {%- endif -%}
+  validator: >-
+    {% if '\n' in lint_command or '\r' in lint_command %}
+    lint_command must be a single line — embedded newlines would break
+    the generated Makefile/justfile recipe syntax. Use a shell wrapper
+    or a script instead.
+    {% endif %}
 
 fmt_command:
   type: str
@@ -196,6 +208,12 @@ fmt_command:
     {%- elif primary_language == 'cpp' -%}cmake --build build --target format
     {%- else -%}echo 'TODO: configure fmt_command in copier.yml'
     {%- endif -%}
+  validator: >-
+    {% if '\n' in fmt_command or '\r' in fmt_command %}
+    fmt_command must be a single line — embedded newlines would break
+    the generated Makefile/justfile recipe syntax. Use a shell wrapper
+    or a script instead.
+    {% endif %}
 
 task_runner:
   type: str

@@ -52,9 +52,9 @@ name, default, or output path bumps the major version).
   smoke test rather than being bypassed.
 - `hooks/post_gen.py` now parses `.copier-answers.yml` with PyYAML
   (already a Copier dependency), catches `yaml.YAMLError`, validates
-  that the root is a `dict` and that values are simple scalars, and
-  collapses whitespace before rendering the answer in the printed
-  next-step line.
+  that the root is a `dict` and that values are `str` scalars, and
+  normalizes newlines to spaces (preserving other internal whitespace)
+  before rendering the answer in the printed next-step line.
 - Renamed `docs/harness-engineering-report.md` →
   `docs/harness-engineering-2026-05.md` to make the dated provenance
   explicit and leave room for follow-up reports.
