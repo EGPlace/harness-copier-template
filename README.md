@@ -132,8 +132,8 @@ harness-copier-template/
 │  ├─ AGENTS.md.jinja
 │  ├─ CLAUDE.md.jinja
 │  ├─ README.md.jinja
-│  ├─ {% if task_runner == 'make' %}Makefile{% endif %}.jinja
-│  ├─ {% if task_runner == 'just' %}justfile{% endif %}.jinja
+│  ├─ {% if task_runner == 'make' %}Makefile.jinja{% endif %}
+│  ├─ {% if task_runner == 'just' %}justfile.jinja{% endif %}
 │  ├─ .gitignore.jinja
 │  ├─ docs/
 │  ├─ specs/
@@ -143,7 +143,7 @@ harness-copier-template/
 │  ├─ .opencode/
 │  ├─ {% if cursor %}.cursor{% endif %}/
 │  ├─ {% if copilot %}.github{% endif %}/
-│  └─ {% if mcp %}.mcp.json{% endif %}.jinja
+│  └─ {% if mcp %}.mcp.json.jinja{% endif %}
 └─ README.md          # this file
 ```
 
