@@ -23,6 +23,7 @@ just {{ target }}
 {%-   elif target == 'lint' -%}{{ lint_command }}
 {%-   elif target == 'fmt' -%}{{ fmt_command }}
 {%-   elif target == 'verify' -%}{{ verify_command }}
+{%-   else -%}<UNKNOWN cmd('{{ target }}') for task_runner=none>
 {%-   endif -%}
 {%- endif -%}
 {%- endmacro -%}

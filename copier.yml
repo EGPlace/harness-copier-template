@@ -216,10 +216,18 @@ task_runner:
 verify_command:
   type: str
   help: |
-    Command agents and hooks invoke to run the full verification gate.
+    Underlying verification gate. The exact role of this value depends on
+    task_runner:
+      - task_runner=make/just: this is what the generated 'verify' recipe
+        shells out to. The Claude Code Stop hook invokes 'make verify' or
+        'just verify' (so the runner wiring is exercised), and the recipe
+        in turn calls verify_command.
+      - task_runner=none: there is no recipe layer; the Stop hook and the
+        '/verify' slash command invoke verify_command directly.
     Default is './scripts/verify.sh' (the canonical lint+test runner).
-    For projects whose task manager already defines a verify task, set
-    this to e.g. 'pixi run verify' or 'hatch run verify'.
+    For projects whose task manager already defines a verify task with
+    task_runner=none, set this to e.g. 'pixi run verify' or
+    'hatch run verify'.
   default: "./scripts/verify.sh"
 
 generate_scripts:

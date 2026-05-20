@@ -48,8 +48,9 @@ def _read_answer(key: str, default: str) -> str:
     except ImportError:
         return default
     try:
-        data = yaml.safe_load(answers.read_text(encoding="utf-8"))
-    except yaml.YAMLError:
+        raw = answers.read_text(encoding="utf-8")
+        data = yaml.safe_load(raw)
+    except (OSError, UnicodeError, yaml.YAMLError):
         return default
     if not isinstance(data, dict):
         return default

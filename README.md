@@ -125,7 +125,7 @@ harness-copier-template/
 │                     # can `{% from '_macros.jinja' import ... %}` regardless
 │                     # of _subdirectory (the file itself never renders).
 ├─ docs/
-│  └─ harness-engineering-report.md  # Source report this template implements
+│  └─ harness-engineering-2026-05.md  # Source report this template implements
 ├─ hooks/
 │  └─ post_gen.py     # Idempotent .gitignore merge + symlink creation
 ├─ template/          # _subdirectory = "template"; everything below is rendered
@@ -181,7 +181,7 @@ only when `generate_scripts=true`. If you disable it, make sure
 ## Provenance
 
 This template implements **Proposal A** from the *Harness Engineering for AI
-Coding Agents in 2025–2026* report ([`docs/harness-engineering-report.md`](docs/harness-engineering-report.md)),
+Coding Agents in 2025–2026* report ([`docs/harness-engineering-2026-05.md`](docs/harness-engineering-2026-05.md)),
 which synthesises practice as of mid-2026 from:
 
 - Anthropic Claude Code docs and engineering blog
