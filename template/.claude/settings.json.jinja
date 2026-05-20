@@ -1,7 +1,17 @@
+{%- from '_macros.jinja' import cmd with context -%}
 {
   "permissions": {
     "allow": [
+      {% if task_runner == 'make' -%}
       "Bash(make:*)",
+      {% elif task_runner == 'just' -%}
+      "Bash(just:*)",
+      {% elif task_runner == 'none' -%}
+      {{ ('Bash(' ~ verify_command ~ ')') | tojson }},
+      {{ ('Bash(' ~ test_command ~ ')') | tojson }},
+      {{ ('Bash(' ~ lint_command ~ ')') | tojson }},
+      {{ ('Bash(' ~ fmt_command ~ ')') | tojson }},
+      {% endif -%}
       "Bash(git status)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -47,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat); [ \"$(echo $INPUT | jq -r '.stop_hook_active // false')\" = 'true' ] && exit 0; make verify || exit 2"
+            "command": {{ ("INPUT=$(cat); [ \"$(printf '%s' \"$INPUT\" | jq -r '.stop_hook_active // false')\" = 'true' ] && exit 0; " ~ cmd('verify') ~ " || exit 2") | tojson }}
           }
         ]
       }

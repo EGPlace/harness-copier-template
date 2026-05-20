@@ -14,7 +14,7 @@ your-repo/
 ├─ AGENTS.md                         # canonical, ≤200 lines target
 ├─ CLAUDE.md                         # @AGENTS.md + Claude-Code-only stanzas
 ├─ README.md                         # greenfield only
-├─ Makefile                          # test / lint / fmt / verify
+├─ Makefile  OR  justfile  (or neither)  # task_runner: make | just | none
 ├─ .gitignore                        # greenfield: full; brownfield: merged
 ├─ docs/
 │  ├─ architecture.md
@@ -22,7 +22,9 @@ your-repo/
 │  ├─ testing.md
 │  └─ adr/0001-record-architecture-decisions.md   # if include_example_adr
 ├─ specs/                            # per-feature; YYYY-MM-example/ if opted in
-├─ scripts/verify.sh                 # what Stop hook runs
+├─ scripts/                          # shell entry points (if generate_scripts)
+│  ├─ verify.sh                      # default implementation of verify_command (canonical lint+test gate)
+│  └─ fmt-file.sh                    # per-file formatter slot for the PostToolUse hook
 ├─ .agents/                          # vendor-neutral shared assets
 │  ├─ skills/verify/SKILL.md         # if include_example_skill
 │  └─ subagents/explorer.md          # if include_example_subagent
@@ -62,9 +64,12 @@ The template asks you:
 | `project_description`     | One sentence                                             |
 | `primary_language`        | Drives sensible defaults for commands                    |
 | `package_manager`         | Restricted to your language's options                    |
-| `test_command`            | Wired into `make test`                                   |
-| `lint_command`            | Wired into `make lint`                                   |
-| `fmt_command`             | Wired into `make fmt`                                    |
+| `test_command`            | Wired into the task runner's `test` target               |
+| `lint_command`            | Wired into the task runner's `lint` target               |
+| `fmt_command`             | Wired into the task runner's `fmt` target                |
+| `task_runner`             | `make` (default) \| `just` \| `none`                     |
+| `verify_command`          | What hooks and `/verify` run; default `./scripts/verify.sh` |
+| `generate_scripts`        | Generate `scripts/` placeholders (`verify.sh`, `fmt-file.sh`); default `true` |
 | `license`                 | SPDX id                                                  |
 | `cursor`                  | Off by default                                           |
 | `copilot`                 | Off by default                                           |
@@ -84,9 +89,11 @@ copier copy gh:your-org/harness-copier-template .
 
 Choose `mode: brownfield`. The template:
 
-- **Never silently overwrites** `README.md`, `Makefile`, `.gitignore`,
-  `.mcp.json`, or anything under `docs/`. They're listed in
-  `_skip_if_exists` — copier leaves the existing file in place.
+- **Never silently overwrites** `README.md`, `Makefile`, `justfile`,
+  `.gitignore`, `.mcp.json`, or anything under `docs/`. They're listed in
+  `_skip_if_exists` — copier leaves the existing file in place. (This also
+  means switching `task_runner` later does not delete the previous file;
+  remove it manually if you no longer want it.)
 - **Appends** the harness's gitignore entries inside a fenced
   `# >>> ai-agent-harness >>>` … `# <<< ai-agent-harness <<<` block via the
   post-generation hook, so the operation is idempotent across re-runs.
@@ -114,15 +121,19 @@ apply, and the post-gen hook re-runs idempotently.
 ```
 harness-copier-template/
 ├─ copier.yml         # Questions + engine config
+├─ _macros.jinja      # Shared Jinja macros; lives at repo root so templates
+│                     # can `{% from '_macros.jinja' import ... %}` regardless
+│                     # of _subdirectory (the file itself never renders).
 ├─ docs/
-│  └─ harness-engineering-report.md  # Source report this template implements
+│  └─ harness-engineering-2026-05.md  # Source report this template implements
 ├─ hooks/
 │  └─ post_gen.py     # Idempotent .gitignore merge + symlink creation
 ├─ template/          # _subdirectory = "template"; everything below is rendered
 │  ├─ AGENTS.md.jinja
 │  ├─ CLAUDE.md.jinja
 │  ├─ README.md.jinja
-│  ├─ Makefile.jinja
+│  ├─ {% if task_runner == 'make' %}Makefile{% endif %}.jinja
+│  ├─ {% if task_runner == 'just' %}justfile{% endif %}.jinja
 │  ├─ .gitignore.jinja
 │  ├─ docs/
 │  ├─ specs/
@@ -132,18 +143,49 @@ harness-copier-template/
 │  ├─ .opencode/
 │  ├─ {% if cursor %}.cursor{% endif %}/
 │  ├─ {% if copilot %}.github{% endif %}/
-│  └─ {% if mcp %}.mcp.json{% endif %}.jinja
+│  └─ {% if mcp %}.mcp.json{% endif %}
 └─ README.md          # this file
 ```
 
 Conditional dirs and files use Copier's standard Jinja-in-path technique:
 the path segment renders to an empty string when the gate is false, and
-Copier drops the file/dir.
+Copier drops the file/dir. Note that `.jinja` (the configured
+`_templates_suffix`) must stay **outside** the `{% if %}` block —
+Copier strips the suffix at file-name parsing time, before the Jinja-in-path
+condition is evaluated, so a path like `{% if x %}foo.jinja{% endif %}`
+would keep its literal `.jinja` extension in the output.
+
+## Choosing a task runner
+
+`task_runner` defaults to `make` — the universal choice the source report
+recommends. Pick a different value if it matches how your team already runs
+tasks:
+
+- **`make`** (default) — generate a `Makefile`. Universal toolchain, no
+  extra install. Recommended when the project doesn't already have its own
+  task runner.
+- **`just`** — generate a `justfile` ([just.systems](https://just.systems/)).
+  Cleaner syntax, no tab-sensitivity. Requires `just` on PATH.
+- **`none`** — generate neither. Use this for projects whose package /
+  project manager already provides task management (e.g. **pixi** tasks
+  defined in `pixi.toml`, **hatch** scripts in `pyproject.toml`, `pnpm`
+  scripts, `cargo` aliases). The harness will then surface the raw
+  `test_command` / `lint_command` / `fmt_command` / `verify_command` to
+  agents directly. Consider setting `verify_command` to e.g.
+  `pixi run verify` to keep the Stop hook and `/verify` slash command
+  pointed at your existing pipeline.
+
+The `verify_command` answer (default `./scripts/verify.sh`) is what the
+Claude Code Stop hook and the `/verify` slash command invoke. The
+`scripts/` folder itself — including the default `verify.sh` and the
+`fmt-file.sh` slot that the PostToolUse hook discovers — is generated
+only when `generate_scripts=true`. If you disable it, make sure
+`verify_command` points at a gate that does exist (e.g. `pixi run verify`).
 
 ## Provenance
 
 This template implements **Proposal A** from the *Harness Engineering for AI
-Coding Agents in 2025–2026* report ([`docs/harness-engineering-report.md`](docs/harness-engineering-report.md)),
+Coding Agents in 2025–2026* report ([`docs/harness-engineering-2026-05.md`](docs/harness-engineering-2026-05.md)),
 which synthesises practice as of mid-2026 from:
 
 - Anthropic Claude Code docs and engineering blog

@@ -1,0 +1,34 @@
+# {{ project_name }} — task runner (just). See https://just.systems/.
+# Run `just` (or `just --list`) to see available recipes.
+
+# Show available recipes
+default:
+    @just --list
+
+# Run fast unit tests
+test:
+    {{ test_command }}
+
+# Run the full suite (override to add integration/e2e)
+test-all: test
+    @echo "test-all: extend this recipe with integration suites as needed"
+
+# Run static checks (does not auto-fix)
+lint:
+    {{ lint_command }}
+
+# Auto-format the codebase
+fmt:
+    {{ fmt_command }}
+
+# What the agent runs before claiming done
+verify:
+    @{{ verify_command }}
+
+# Run the local dev workflow (override per-project)
+dev:
+    @echo "dev: override this recipe to start your dev server / watcher"
+
+# Remove generated artefacts (override per-project)
+clean:
+    @echo "clean: override this recipe to remove build/ dist/ etc."

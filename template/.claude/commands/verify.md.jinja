@@ -1,8 +1,9 @@
+{%- from '_macros.jinja' import cmd with context -%}
 ---
-description: Run the project's verification gate (make verify) and summarise the result
+description: {{ ("Run the project's verification gate (" ~ cmd('verify') ~ ") and summarise the result") | tojson }}
 ---
 
-Run `make verify`.
+Run `{{ cmd('verify') }}`.
 
 - If it exits 0: summarise what changed since the last verify (use `git diff
   --stat` and `git log -1`) and stop.

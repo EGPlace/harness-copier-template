@@ -1,0 +1,68 @@
+{#-
+  Shared rendering macros. This file lives at the repository root, outside
+  the _subdirectory ("template/"), so Copier never renders it into the
+  output tree. It is NOT in _exclude — that would risk breaking Jinja's
+  template loader, which must be able to resolve `{% from '_macros.jinja' %}`.
+
+  Import from any template like:
+      {% from '_macros.jinja' import cmd %}
+
+  cmd(target) renders the user-facing command for a dev task. It resolves
+  to `make <target>`, `just <target>`, or the raw underlying command,
+  depending on the `task_runner` answer.
+
+  When task_runner=none, only the four well-known targets (test, lint,
+  fmt, verify) have a sensible mapping. Other targets like `test-all`
+  intentionally have no fallback there — call sites should guard with
+  `has_cmd(target)` before referencing them.
+-#}
+{%- macro cmd(target) -%}
+{%- if task_runner == 'make' -%}
+make {{ target }}
+{%- elif task_runner == 'just' -%}
+just {{ target }}
+{%- else -%}
+{%-   if target == 'test' -%}{{ test_command }}
+{%-   elif target == 'lint' -%}{{ lint_command }}
+{%-   elif target == 'fmt' -%}{{ fmt_command }}
+{%-   elif target == 'verify' -%}{{ verify_command }}
+{%-   else -%}
+{#- Fail render loudly: an unsupported target under task_runner=none
+    indicates a missing has_cmd() guard at the call site. Better to
+    surface the bug at `copier copy/update` time than to ship a
+    sentinel or empty string into the generated repo. The expression
+    below interpolates the bad target into a missing attribute name,
+    so Copier's StrictUndefined surfaces an error like `'dict object'
+    has no attribute 'cmd_target_undefined_for_task_runner_none__<target>'`
+    — naming the offending call site for the template author. -#}
+{{- {} | attr('cmd_target_undefined_for_task_runner_none__' ~ target) -}}
+{%-   endif -%}
+{%- endif -%}
+{%- endmacro -%}
+{#-
+  has_cmd(target) — emit a truthy string if cmd(target) renders something
+  usable, otherwise emit an empty (falsy) string. Use at call sites as
+  `{% if has_cmd('test-all') %} … {% endif %}` — Jinja treats any
+  non-empty string as truthy.
+
+  The known target sets mirror what the generated Makefile / justfile
+  actually define and what `cmd()` handles for `task_runner=none`. Keep
+  these tuples in sync if the runner files grow a new recipe.
+-#}
+{%- macro has_cmd(target) -%}
+{%- if task_runner in ('make', 'just')
+       and target in ('test', 'test-all', 'lint', 'fmt', 'verify', 'dev', 'clean') -%}yes
+{%- elif task_runner == 'none'
+       and target in ('test', 'lint', 'fmt', 'verify') -%}yes
+{%- endif -%}
+{%- endmacro -%}
+{#-
+  runner_file_name() — human label for the file that defines the tasks,
+  used in prose like "fix the Makefile / justfile / underlying task definition".
+-#}
+{%- macro runner_file_name() -%}
+{%- if task_runner == 'make' -%}Makefile
+{%- elif task_runner == 'just' -%}justfile
+{%- else -%}underlying task definition
+{%- endif -%}
+{%- endmacro -%}

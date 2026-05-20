@@ -18,7 +18,16 @@
   // Permission policy — mirrors .claude/settings.json deny list.
   "permission": {
     "bash": {
+      {% if task_runner == 'make' -%}
       "make *": "allow",
+      {% elif task_runner == 'just' -%}
+      "just *": "allow",
+      {% elif task_runner == 'none' -%}
+      {{ verify_command | tojson }}: "allow",
+      {{ test_command | tojson }}: "allow",
+      {{ lint_command | tojson }}: "allow",
+      {{ fmt_command | tojson }}: "allow",
+      {% endif -%}
       "git status": "allow",
       "git diff*": "allow",
       "git log*": "allow",

@@ -10,9 +10,9 @@
 #   Brownfield: cd existing-repo && copier copy gh:your-org/harness-copier-template .
 #   Update:     cd repo && copier update
 #
-# Brown-field safety: README.md, Makefile, and .gitignore are protected via
-# _skip_if_exists. Copier will leave the existing file in place and you can
-# diff/merge the template version manually if needed.
+# Brown-field safety: README.md, Makefile, justfile, and .gitignore are
+# protected via _skip_if_exists. Copier will leave the existing file in
+# place and you can diff/merge the template version manually if needed.
 
 # ---------------------------------------------------------------------------
 # Copier engine settings
@@ -28,6 +28,7 @@ _answers_file: ".copier-answers.yml"
 _skip_if_exists:
   - "README.md"
   - "Makefile"
+  - "justfile"
   - ".gitignore"
   - ".mcp.json"
   - "docs/architecture.md"
@@ -52,6 +53,11 @@ _exclude:
   - ".DS_Store"
   - "hooks"
   - "README.template.md"
+  # Note: _macros.jinja lives at the repo root (outside _subdirectory),
+  # so it's never rendered to output regardless of _exclude. It is
+  # imported by templates via `{% from '_macros.jinja' import ... %}`
+  # — do NOT add it to _exclude, in case some Copier version/tooling
+  # applies exclusion to the Jinja loader context and breaks imports.
 
 # ---------------------------------------------------------------------------
 # Questions (minimum set)
@@ -142,7 +148,7 @@ package_manager:
 
 test_command:
   type: str
-  help: "Command that runs the fast test suite (will be wired into 'make test')"
+  help: "Command that runs the fast test suite (wired into the task runner's 'test' target, or surfaced directly to agents when task_runner=none)"
   default: >-
     {%- if primary_language == 'python' and package_manager == 'uv' -%}uv run pytest -q
     {%- elif primary_language == 'python' and package_manager == 'pixi' -%}pixi run test
@@ -156,10 +162,16 @@ test_command:
     {%- elif primary_language == 'cpp' -%}ctest --output-on-failure
     {%- else -%}echo 'TODO: configure test_command in copier.yml'
     {%- endif -%}
+  validator: >-
+    {%- if '\n' in test_command or '\r' in test_command -%}
+    test_command must be a single line — embedded newlines would break
+    the generated Makefile/justfile recipe syntax. Use a shell wrapper
+    or a script instead.
+    {%- endif -%}
 
 lint_command:
   type: str
-  help: "Command that runs static checks (will be wired into 'make lint')"
+  help: "Command that runs static checks (wired into the task runner's 'lint' target, or surfaced directly to agents when task_runner=none)"
   default: >-
     {%- if primary_language == 'python' and package_manager == 'uv' -%}uv run ruff check .
     {%- elif primary_language == 'python' and package_manager == 'pixi' -%}pixi run lint
@@ -173,10 +185,16 @@ lint_command:
     {%- elif primary_language == 'cpp' -%}cmake --build build --target lint
     {%- else -%}echo 'TODO: configure lint_command in copier.yml'
     {%- endif -%}
+  validator: >-
+    {%- if '\n' in lint_command or '\r' in lint_command -%}
+    lint_command must be a single line — embedded newlines would break
+    the generated Makefile/justfile recipe syntax. Use a shell wrapper
+    or a script instead.
+    {%- endif -%}
 
 fmt_command:
   type: str
-  help: "Command that auto-formats code (will be wired into 'make fmt')"
+  help: "Command that auto-formats code (wired into the task runner's 'fmt' target, or surfaced directly to agents when task_runner=none)"
   default: >-
     {%- if primary_language == 'python' and package_manager == 'uv' -%}uv run ruff format .
     {%- elif primary_language == 'python' and package_manager == 'pixi' -%}pixi run fmt
@@ -190,6 +208,74 @@ fmt_command:
     {%- elif primary_language == 'cpp' -%}cmake --build build --target format
     {%- else -%}echo 'TODO: configure fmt_command in copier.yml'
     {%- endif -%}
+  validator: >-
+    {%- if '\n' in fmt_command or '\r' in fmt_command -%}
+    fmt_command must be a single line — embedded newlines would break
+    the generated Makefile/justfile recipe syntax. Use a shell wrapper
+    or a script instead.
+    {%- endif -%}
+
+task_runner:
+  type: str
+  help: |
+    How to wire dev tasks (test/lint/fmt/verify) for agents and humans:
+      - make: generate a Makefile. Universal, no extra install.
+      - just: generate a justfile (https://just.systems). Nicer syntax,
+              no tab-sensitivity; requires `just` on PATH.
+      - none: generate neither. Use this when your package manager already
+              provides task management (pixi tasks, hatch scripts, pnpm
+              scripts, cargo aliases, etc.). Agent docs will reference the
+              raw test/lint/fmt/verify commands directly.
+  default: make
+  choices:
+    - make
+    - just
+    - none
+
+verify_command:
+  type: str
+  help: |
+    Underlying verification gate. The exact role of this value depends on
+    task_runner:
+      - task_runner=make/just: this is what the generated 'verify' recipe
+        shells out to. The Claude Code Stop hook invokes 'make verify' or
+        'just verify' (so the runner wiring is exercised), and the recipe
+        in turn calls verify_command.
+      - task_runner=none: there is no recipe layer; the Stop hook and the
+        '/verify' slash command invoke verify_command directly.
+    Default is './scripts/verify.sh' (the canonical lint+test runner).
+    For projects whose task manager already defines a verify task with
+    task_runner=none, set this to e.g. 'pixi run verify' or
+    'hatch run verify'.
+  default: "./scripts/verify.sh"
+  validator: >-
+    {%- if not verify_command.strip() -%}
+    verify_command cannot be empty — it is used as the Stop-hook command
+    and the default verify target. Set it to your verification gate
+    (e.g. './scripts/verify.sh' or 'pixi run verify').
+    {%- elif '\n' in verify_command or '\r' in verify_command -%}
+    verify_command must be a single line — embedded newlines would let
+    a multi-line value split into multiple shell commands inside the
+    Stop hook. Use a shell wrapper or put the multi-step logic in
+    scripts/verify.sh instead.
+    {%- endif -%}
+
+generate_scripts:
+  type: bool
+  help: |
+    Generate the scripts/ folder with placeholders for the shell entry
+    points the harness expects to be able to invoke:
+      - scripts/verify.sh    canonical lint+test gate; what verify_command
+                             points at by default and what `make verify` /
+                             `just verify` invoke.
+      - scripts/fmt-file.sh  per-file formatter discovered by the Claude
+                             Code PostToolUse hook (already wired with a
+                             `test -x` guard, so an absent file no-ops).
+    Independent of task_runner: keep these scripts even with
+    task_runner=none if you want a single shell-script entry point, or
+    skip them when task_runner=make/just but verify_command points at a
+    project-native pipeline (e.g. `pixi run verify`).
+  default: true
 
 license:
   type: str
@@ -241,11 +327,35 @@ include_example_subagent:
 include_claude_hooks:
   type: bool
   help: |
-    Include Claude Code hooks in .claude/settings.json (auto-format on edit,
-    block destructive bash, run 'make verify' on Stop)? Requires `jq` on PATH.
+    Include Claude Code hooks in .claude/settings.json (auto-format on
+    edit, block destructive bash, run the verify gate on Stop)? The
+    Stop hook invokes the user-facing runner command — `make verify` /
+    `just verify` for task_runner=make/just, or verify_command directly
+    when task_runner=none — so the generated runner wiring is part of
+    the agent loop. Requires `jq` on PATH.
   default: true
 
 include_example_spec:
   type: bool
   help: "Include a stub specs/<date>-example/ directory with spec/plan/tasks templates?"
   default: false
+
+# ---------------------------------------------------------------------------
+# Post-generation message — warn about inconsistent answer combinations.
+# ---------------------------------------------------------------------------
+_message_after_copy: |
+  {% if not generate_scripts and verify_command == './scripts/verify.sh' -%}
+  WARNING: generate_scripts=false but verify_command still points at
+  './scripts/verify.sh', which will not exist. Either re-run with
+  generate_scripts=true, or set verify_command to your project's
+  own gate (e.g. 'pixi run verify', 'hatch run verify').
+  {%- endif %}
+  {% if task_runner == 'none' -%}
+  Note: task_runner=none — no Makefile or justfile was generated. Agents
+  will invoke the raw commands (test_command, lint_command, fmt_command,
+  verify_command) directly. The generated .claude/settings.json and
+  .opencode/opencode.jsonc allow each of those four commands exactly so
+  the agent loop runs without prompts. To also allow related commands
+  (e.g. other pixi/hatch tasks), add a broader wildcard entry to both
+  config files manually.
+  {%- endif %}

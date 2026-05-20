@@ -1,4 +1,5 @@
 # {{ project_name }} — Agent Instructions
+{%- from '_macros.jinja' import cmd, runner_file_name with context %}
 
 > README for agents. Read by Codex, OpenCode, Cursor, Amp, Factory, Gemini CLI,
 > GitHub Copilot, and (via the `@AGENTS.md` import in `CLAUDE.md`) Claude Code.
@@ -15,12 +16,12 @@
 
 ## Commands (prefer these over guessing)
 
-- `make test` — `{{ test_command }}`
-- `make lint` — `{{ lint_command }}`
-- `make fmt`  — `{{ fmt_command }}`
-- `make verify` — `scripts/verify.sh` (what the Claude Code `Stop` hook runs)
+- `{{ cmd('test') }}` — fast unit tests{% if task_runner != 'none' %} (= `{{ test_command }}`){% endif %}
+- `{{ cmd('lint') }}` — static checks{% if task_runner != 'none' %} (= `{{ lint_command }}`){% endif %}
+- `{{ cmd('fmt') }}`  — auto-format{% if task_runner != 'none' %} (= `{{ fmt_command }}`){% endif %}
+- `{{ cmd('verify') }}` — full verification gate (what the Claude Code `Stop` hook runs)
 
-If a command above is wrong for your environment, **fix the Makefile**, not
+If a command above is wrong for your environment, **fix the {{ runner_file_name() }}**, not
 this file.
 
 ## Where things live (capabilities, not paths)
@@ -39,7 +40,7 @@ For Claude Code users:
 
 ## Do
 
-- Run `make verify` before claiming a task is done.
+- Run `{{ cmd('verify') }}` before claiming a task is done.
 - For a net-new feature, create `specs/<YYYY-MM>-<slug>/` and write `spec.md`
   and `plan.md` **before** writing code. See `.claude/commands/spec.md`.
 - For a new architectural choice (dependency, framework, persistence, auth),
@@ -49,7 +50,7 @@ For Claude Code users:
 
 ## Don't
 
-- Don't edit anything under `*/generated/` — it's overwritten by `make codegen`.
+- Don't edit anything under `*/generated/` — it's overwritten by your project's codegen pipeline.
 - Don't add a runtime dependency without an ADR.
 - Don't run destructive Git: `push --force`, `reset --hard origin/*`,
   history rewrites on shared branches.
