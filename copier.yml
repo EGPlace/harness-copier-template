@@ -163,11 +163,11 @@ test_command:
     {%- else -%}echo 'TODO: configure test_command in copier.yml'
     {%- endif -%}
   validator: >-
-    {% if '\n' in test_command or '\r' in test_command %}
+    {%- if '\n' in test_command or '\r' in test_command -%}
     test_command must be a single line — embedded newlines would break
     the generated Makefile/justfile recipe syntax. Use a shell wrapper
     or a script instead.
-    {% endif %}
+    {%- endif -%}
 
 lint_command:
   type: str
@@ -186,11 +186,11 @@ lint_command:
     {%- else -%}echo 'TODO: configure lint_command in copier.yml'
     {%- endif -%}
   validator: >-
-    {% if '\n' in lint_command or '\r' in lint_command %}
+    {%- if '\n' in lint_command or '\r' in lint_command -%}
     lint_command must be a single line — embedded newlines would break
     the generated Makefile/justfile recipe syntax. Use a shell wrapper
     or a script instead.
-    {% endif %}
+    {%- endif -%}
 
 fmt_command:
   type: str
@@ -209,11 +209,11 @@ fmt_command:
     {%- else -%}echo 'TODO: configure fmt_command in copier.yml'
     {%- endif -%}
   validator: >-
-    {% if '\n' in fmt_command or '\r' in fmt_command %}
+    {%- if '\n' in fmt_command or '\r' in fmt_command -%}
     fmt_command must be a single line — embedded newlines would break
     the generated Makefile/justfile recipe syntax. Use a shell wrapper
     or a script instead.
-    {% endif %}
+    {%- endif -%}
 
 task_runner:
   type: str
@@ -249,12 +249,12 @@ verify_command:
     'hatch run verify'.
   default: "./scripts/verify.sh"
   validator: >-
-    {% if '\n' in verify_command or '\r' in verify_command %}
+    {%- if '\n' in verify_command or '\r' in verify_command -%}
     verify_command must be a single line — embedded newlines would let
     a multi-line value split into multiple shell commands inside the
     Stop hook. Use a shell wrapper or put the multi-step logic in
     scripts/verify.sh instead.
-    {% endif %}
+    {%- endif -%}
 
 generate_scripts:
   type: bool
