@@ -349,8 +349,9 @@ _message_after_copy: |
   {% if task_runner == 'none' -%}
   Note: task_runner=none — no Makefile or justfile was generated. Agents
   will invoke the raw commands (test_command, lint_command, fmt_command,
-  verify_command) directly. If you use OpenCode or Claude Code, you may
-  want to add an allow rule for your project manager
-  (e.g. 'pixi *' or 'hatch *') to .opencode/opencode.jsonc and
-  .claude/settings.json so common commands don't prompt every time.
+  verify_command) directly. The generated .claude/settings.json and
+  .opencode/opencode.jsonc already allow '{{ verify_command.split()[0] }} *'
+  so verification runs without prompts. Review and broaden the rule if
+  you run other project-manager commands (e.g. 'pixi *', 'hatch *')
+  frequently.
   {%- endif %}

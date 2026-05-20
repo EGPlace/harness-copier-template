@@ -6,6 +6,8 @@
       "Bash(make:*)",
       {% elif task_runner == 'just' -%}
       "Bash(just:*)",
+      {% elif task_runner == 'none' -%}
+      "Bash({{ verify_command.split()[0] }}:*)",
       {% endif -%}
       "Bash(git status)",
       "Bash(git diff:*)",
