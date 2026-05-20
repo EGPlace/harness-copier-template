@@ -36,9 +36,11 @@ def _read_answer(key: str, default: str) -> str:
     script is invoked by the Copier engine) so quoted strings, inline
     comments, and block scalars all parse correctly. Returns ``default``
     if the file is missing, malformed, or the key resolves to anything
-    other than a string/int/float/bool. Block scalars are accepted; any
-    internal whitespace is collapsed so the result remains a single
-    printable line (the caller renders it inside backticks).
+    other than a string/int/float/bool. Block-scalar newlines are
+    collapsed to single spaces so the result fits on one line when
+    printed inside backticks; other internal whitespace (multiple
+    spaces, tabs) is preserved because it can be intentional inside a
+    quoted argument.
     """
     answers = CWD / ".copier-answers.yml"
     if not answers.exists():
@@ -160,7 +162,8 @@ def main() -> int:
     # Print the user-facing invocation, not just the raw verify_command,
     # so the suggestion also exercises the generated Makefile/justfile
     # wiring (and only falls back to verify_command for task_runner=none).
-    task_runner = _read_answer("task_runner", "none")
+    # Default matches copier.yml's default for the same answer.
+    task_runner = _read_answer("task_runner", "make")
     if task_runner == "make":
         verify_invocation = "make verify"
     elif task_runner == "just":

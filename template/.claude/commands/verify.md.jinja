@@ -1,6 +1,6 @@
 {%- from '_macros.jinja' import cmd with context -%}
 ---
-description: Run the project's verification gate ({{ cmd('verify') }}) and summarise the result
+description: {{ ("Run the project's verification gate (" ~ cmd('verify') ~ ") and summarise the result") | tojson }}
 ---
 
 Run `{{ cmd('verify') }}`.
