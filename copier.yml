@@ -229,6 +229,13 @@ verify_command:
     task_runner=none, set this to e.g. 'pixi run verify' or
     'hatch run verify'.
   default: "./scripts/verify.sh"
+  validator: >-
+    {% if '\n' in verify_command or '\r' in verify_command %}
+    verify_command must be a single line — embedded newlines would let
+    a multi-line value split into multiple shell commands inside the
+    Stop hook. Use a shell wrapper or put the multi-step logic in
+    scripts/verify.sh instead.
+    {% endif %}
 
 generate_scripts:
   type: bool
@@ -297,9 +304,12 @@ include_example_subagent:
 include_claude_hooks:
   type: bool
   help: |
-    Include Claude Code hooks in .claude/settings.json (auto-format on edit,
-    block destructive bash, run the configured verify_command on Stop)?
-    Requires `jq` on PATH.
+    Include Claude Code hooks in .claude/settings.json (auto-format on
+    edit, block destructive bash, run the verify gate on Stop)? The
+    Stop hook invokes the user-facing runner command — `make verify` /
+    `just verify` for task_runner=make/just, or verify_command directly
+    when task_runner=none — so the generated runner wiring is part of
+    the agent loop. Requires `jq` on PATH.
   default: true
 
 include_example_spec:

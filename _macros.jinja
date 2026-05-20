@@ -23,7 +23,14 @@ just {{ target }}
 {%-   elif target == 'lint' -%}{{ lint_command }}
 {%-   elif target == 'fmt' -%}{{ fmt_command }}
 {%-   elif target == 'verify' -%}{{ verify_command }}
-{%-   else -%}!!!UNDEFINED-CMD[{{ target }}/task_runner=none]!!!
+{%-   else -%}
+{#- Fail render loudly: an unsupported target under task_runner=none
+    indicates a missing has_cmd() guard at the call site. Better to
+    surface the bug at `copier copy/update` time than to ship a
+    sentinel or empty string into the generated repo. We trigger
+    StrictUndefined (Copier's default) via an attribute lookup on a
+    deliberately-undefined symbol whose name encodes the bad target. -#}
+{{- cmd_target_undefined_for_task_runner_none[target] -}}
 {%-   endif -%}
 {%- endif -%}
 {%- endmacro -%}
