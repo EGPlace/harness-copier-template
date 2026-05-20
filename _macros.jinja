@@ -7,6 +7,11 @@
   cmd(target) renders the user-facing command for a dev task. It resolves
   to `make <target>`, `just <target>`, or the raw underlying command,
   depending on the `task_runner` answer.
+
+  When task_runner=none, only the four well-known targets (test, lint,
+  fmt, verify) have a sensible mapping. Other targets like `test-all`
+  intentionally have no fallback there — call sites should guard with
+  `has_cmd(target)` before referencing them.
 -#}
 {%- macro cmd(target) -%}
 {%- if task_runner == 'make' -%}
@@ -18,9 +23,18 @@ just {{ target }}
 {%-   elif target == 'lint' -%}{{ lint_command }}
 {%-   elif target == 'fmt' -%}{{ fmt_command }}
 {%-   elif target == 'verify' -%}{{ verify_command }}
-{%-   elif target == 'test-all' -%}{{ test_command }}
-{%-   else -%}{{ target }}
 {%-   endif -%}
+{%- endif -%}
+{%- endmacro -%}
+{#-
+  has_cmd(target) — true if cmd(target) renders something usable. Use
+  this to guard prose that references task-runner-only targets (e.g.
+  `test-all`) when `task_runner=none`.
+-#}
+{%- macro has_cmd(target) -%}
+{%- if task_runner in ('make', 'just') -%}true
+{%- elif target in ('test', 'lint', 'fmt', 'verify') -%}true
+{%- else -%}{# render empty = falsy when compared to 'true' #}
 {%- endif -%}
 {%- endmacro -%}
 {#-

@@ -119,6 +119,9 @@ apply, and the post-gen hook re-runs idempotently.
 ```
 harness-copier-template/
 ├─ copier.yml         # Questions + engine config
+├─ _macros.jinja      # Shared Jinja macros; lives at repo root so templates
+│                     # can `{% from '_macros.jinja' import ... %}` regardless
+│                     # of _subdirectory (the file itself never renders).
 ├─ docs/
 │  └─ harness-engineering-report.md  # Source report this template implements
 ├─ hooks/
@@ -127,7 +130,6 @@ harness-copier-template/
 │  ├─ AGENTS.md.jinja
 │  ├─ CLAUDE.md.jinja
 │  ├─ README.md.jinja
-│  ├─ _macros.jinja                                   # shared Jinja macros (excluded from output)
 │  ├─ {% if task_runner == 'make' %}Makefile{% endif %}.jinja
 │  ├─ {% if task_runner == 'just' %}justfile{% endif %}.jinja
 │  ├─ .gitignore.jinja

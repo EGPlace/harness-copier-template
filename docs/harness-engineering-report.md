@@ -759,5 +759,7 @@ can be matched to the surrounding toolchain instead of forced onto it:
 The agent-facing wording in AGENTS.md, CLAUDE.md, README.md, the
 `/verify` slash command, the `verify` skill, and the OpenCode permission
 list is rendered from a single shared Jinja macro
-(`template/_macros.jinja`) so that all surfaces stay consistent with the
+(`_macros.jinja`, at the repo root so templates can import it as
+`{% from '_macros.jinja' import ... %}` without a `template/` prefix)
+so that all surfaces stay consistent with the
 chosen runner.

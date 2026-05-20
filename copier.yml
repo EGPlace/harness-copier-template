@@ -53,9 +53,10 @@ _exclude:
   - ".DS_Store"
   - "hooks"
   - "README.template.md"
-  # Jinja macro partials — imported by other templates, never rendered to output.
+  # Jinja macro partials live at the repo root (outside _subdirectory),
+  # so they're never rendered to output anyway — listing them here as
+  # documentation.
   - "_macros.jinja"
-  - "_macros"
 
 # ---------------------------------------------------------------------------
 # Questions (minimum set)

@@ -1,4 +1,4 @@
-{%- from 'template/_macros.jinja' import cmd with context -%}
+{%- from '_macros.jinja' import cmd, has_cmd with context -%}
 ---
 name: verify
 description: |
@@ -39,4 +39,5 @@ description: |
   treat exit 2 as a different signal from exit 1 — both mean "fix it".
 {%- endif %}
 - On slow machines `{{ cmd('verify') }}` may exceed 60s. If that becomes
-  routine, open an ADR to move slow suites to `{{ cmd('test-all') }}` / CI.
+  routine, open an ADR to move slow suites to
+  {% if has_cmd('test-all') == 'true' %}`{{ cmd('test-all') }}`{% else %}a dedicated slow-suite command{% endif %} / CI.
