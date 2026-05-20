@@ -27,10 +27,12 @@ just {{ target }}
 {#- Fail render loudly: an unsupported target under task_runner=none
     indicates a missing has_cmd() guard at the call site. Better to
     surface the bug at `copier copy/update` time than to ship a
-    sentinel or empty string into the generated repo. We trigger
-    StrictUndefined (Copier's default) via an attribute lookup on a
-    deliberately-undefined symbol whose name encodes the bad target. -#}
-{{- cmd_target_undefined_for_task_runner_none[target] -}}
+    sentinel or empty string into the generated repo. The expression
+    below interpolates the bad target into a missing attribute name,
+    so Copier's StrictUndefined surfaces an error like `'dict object'
+    has no attribute 'cmd_target_undefined_for_task_runner_none__<target>'`
+    — naming the offending call site for the template author. -#}
+{{- {} | attr('cmd_target_undefined_for_task_runner_none__' ~ target) -}}
 {%-   endif -%}
 {%- endif -%}
 {%- endmacro -%}
