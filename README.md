@@ -157,4 +157,10 @@ which synthesises practice as of mid-2026 from:
 
 ## License
 
-Apache-2.0.
+[MIT](LICENSE).
+
+Note: this license covers the template repository itself. The `license`
+question in `copier.yml` (default `Apache-2.0`) only sets an SPDX
+identifier inside the rendered docs — it does **not** generate a LICENSE
+file in downstream repos. Projects scaffolded from this template should
+add their own LICENSE file separately.
