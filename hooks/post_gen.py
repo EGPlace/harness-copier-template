@@ -41,10 +41,13 @@ def _read_answer(key: str, default: str) -> str:
     ``off`` into booleans — and the only keys this helper is called on
     (``task_runner``, ``verify_command``) are always strings, so any
     other type indicates malformed answers and printing ``True`` as an
-    invocation would mislead. Block-scalar newlines are collapsed to
-    single spaces so the result fits on one line when printed inside
-    backticks; other internal whitespace (multiple spaces, tabs) is
-    preserved because it can be intentional inside a quoted argument.
+    invocation would mislead. Each newline character (including those
+    produced by YAML block scalars) is replaced with a space so the
+    result fits on one line when printed inside backticks; other
+    internal whitespace (multiple spaces, tabs) is preserved because
+    it can be intentional inside a quoted argument. Note that adjacent
+    newlines therefore produce adjacent spaces — the result may contain
+    runs of spaces, but it will always be a single line.
     """
     answers = CWD / ".copier-answers.yml"
     if not answers.exists():
