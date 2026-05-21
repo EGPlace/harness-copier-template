@@ -10,10 +10,11 @@ Responsibilities
    _skip_if_exists preserved. We never duplicate lines; we append only what's
    missing, between fenced markers, so a subsequent `copier update` keeps the
    block tidy.
-2. Create the .agents/{skills,subagents,commands} -> .claude/{skills,agents,commands}
-   and .opencode/{skills,agents,commands} symlinks. We create them as relative symlinks
-   when the platform supports them, and emit a small note otherwise (Windows
-   without developer mode). Symlinks make a single source of truth for
+2. Create the .claude/{skills,agents,commands} and .opencode/{skills,agents,commands}
+   symlinks that point at the canonical .agents/{skills,subagents,commands} sources.
+   We create them as relative symlinks when the platform supports them, and emit
+   an actionable warning otherwise (Windows without developer mode) — see
+   `_make_relative_symlink`. Symlinks make a single source of truth for
    cross-tool agent assets.
 
 This script is deliberately stdlib-only and side-effect-light: it does
@@ -119,7 +120,15 @@ def merge_gitignore(path: Path) -> str:
 
 
 def _make_relative_symlink(link: Path, target_relative: str) -> str:
-    """Create `link` -> `target_relative` if the target exists and the link is missing."""
+    """Create `link` -> `target_relative` if the target exists and the link is missing.
+
+    On failure (typically Windows without Developer Mode or admin rights),
+    emit an actionable warning rather than falling back to a directory copy:
+    a copy would diverge silently the moment a user edits the canonical
+    .agents/ source, and slash commands / skills / subagents not visible
+    in the tool directory is a far less confusing failure than two
+    different versions of the same file.
+    """
     if link.exists() or link.is_symlink():
         return f"skip: {link} already exists"
     target_abs = (link.parent / target_relative).resolve()
@@ -128,7 +137,14 @@ def _make_relative_symlink(link: Path, target_relative: str) -> str:
     try:
         os.symlink(target_relative, link, target_is_directory=True)
     except OSError as e:
-        return f"warn: could not symlink {link} -> {target_relative}: {e}"
+        return (
+            f"warn: could not symlink {link} -> {target_relative}: {e}. "
+            f"On Windows, enable Developer Mode (Settings > For developers) "
+            f"or run as admin and re-run `copier update`. Otherwise, "
+            f"recreate manually: `ln -s {target_relative} {link}` (from a "
+            f"shell that supports symlinks). The canonical files live at "
+            f"`{target_relative.lstrip('./')}`."
+        )
     return f"linked: {link} -> {target_relative}"
 
 
