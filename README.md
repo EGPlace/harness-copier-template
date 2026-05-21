@@ -27,18 +27,19 @@ your-repo/
 │  └─ fmt-file.sh                    # per-file formatter slot for the PostToolUse hook
 ├─ .agents/                          # vendor-neutral shared assets
 │  ├─ skills/verify/SKILL.md         # if include_example_skill
-│  └─ subagents/explorer.md          # if include_example_subagent
+│  ├─ subagents/explorer.md          # if include_example_subagent
+│  └─ commands/{spec,plan,verify}.md
 ├─ .claude/                          # Claude Code (always)
 │  ├─ settings.json                  # permissions (+ hooks if opted in)
-│  ├─ commands/{spec,plan,verify}.md
-│  ├─ skills/    -> ../.agents/skills        (symlink, post-gen)
-│  ├─ agents/    -> ../.agents/subagents     (symlink, post-gen)
+│  ├─ commands/  -> ../.agents/commands       (symlink, post-gen)
+│  ├─ skills/    -> ../.agents/skills         (symlink, post-gen)
+│  ├─ agents/    -> ../.agents/subagents      (symlink, post-gen)
 │  └─ rules/
 ├─ .opencode/                        # OpenCode (always)
 │  ├─ opencode.jsonc
-│  ├─ commands/
-│  ├─ skills/    -> ../.agents/skills        (symlink, post-gen)
-│  └─ agents/    -> ../.agents/subagents     (symlink, post-gen)
+│  ├─ commands/  -> ../.agents/commands       (symlink, post-gen)
+│  ├─ skills/    -> ../.agents/skills         (symlink, post-gen)
+│  └─ agents/    -> ../.agents/subagents      (symlink, post-gen)
 ├─ .cursor/rules/project-context.mdc # if cursor
 ├─ .github/copilot-instructions.md   # if copilot
 └─ .mcp.json + .mcp.example.jsonc    # if mcp
@@ -97,8 +98,9 @@ Choose `mode: brownfield`. The template:
 - **Appends** the harness's gitignore entries inside a fenced
   `# >>> ai-agent-harness >>>` … `# <<< ai-agent-harness <<<` block via the
   post-generation hook, so the operation is idempotent across re-runs.
-- **Symlinks** `.claude/{skills,agents}` and `.opencode/{skills,agents}` to
-  `.agents/{skills,subagents}` after generation.
+- **Symlinks** `.claude/{skills,agents,commands}` and
+  `.opencode/{skills,agents,commands}` to `.agents/{skills,subagents,commands}`
+  after generation.
 
 For files that aren't on the skip list (`AGENTS.md`, `CLAUDE.md`, the slash
 commands, the Claude/OpenCode configs), Copier prompts before overwriting,

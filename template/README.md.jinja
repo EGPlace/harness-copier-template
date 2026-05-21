@@ -20,8 +20,8 @@ This repository follows the **agent-agnostic harness** convention:
   (Codex, OpenCode, Cursor, Amp, Factory, Gemini CLI, Copilot, …).
 - `CLAUDE.md` is a one-line import of `AGENTS.md` plus Claude-Code-only
   stanzas (skills, subagents, slash commands, hooks).
-- Shared agent assets (skills and subagents) live under `.agents/` and are
-  symlinked into `.claude/` and `.opencode/`.
+- Shared agent assets (skills, subagents, and slash commands) live under
+  `.agents/` and are symlinked into `.claude/` and `.opencode/`.
 - Per-feature specs go under `specs/<YYYY-MM>-<slug>/`.
 - Architecture decisions are in `docs/adr/` (Michael Nygard format, append-only).
 
