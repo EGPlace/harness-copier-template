@@ -10,8 +10,8 @@ Responsibilities
    _skip_if_exists preserved. We never duplicate lines; we append only what's
    missing, between fenced markers, so a subsequent `copier update` keeps the
    block tidy.
-2. Create the .agents/{skills,subagents} -> .claude/{skills,agents} and
-   .opencode/{skills,agents} symlinks. We create them as relative symlinks
+2. Create the .agents/{skills,subagents,commands} -> .claude/{skills,agents,commands}
+   and .opencode/{skills,agents,commands} symlinks. We create them as relative symlinks
    when the platform supports them, and emit a small note otherwise (Windows
    without developer mode). Symlinks make a single source of truth for
    cross-tool agent assets.
@@ -139,16 +139,21 @@ def link_agent_assets() -> Iterable[str]:
     Layout (after this runs):
         .agents/skills/       <- source of truth
         .agents/subagents/    <- source of truth
+        .agents/commands/     <- source of truth
         .claude/skills        -> ../.agents/skills
         .claude/agents        -> ../.agents/subagents
+        .claude/commands      -> ../.agents/commands
         .opencode/skills      -> ../.agents/skills
         .opencode/agents      -> ../.agents/subagents
+        .opencode/commands    -> ../.agents/commands
     """
     pairs = [
         (Path(".claude/skills"), "../.agents/skills"),
         (Path(".claude/agents"), "../.agents/subagents"),
+        (Path(".claude/commands"), "../.agents/commands"),
         (Path(".opencode/skills"), "../.agents/skills"),
         (Path(".opencode/agents"), "../.agents/subagents"),
+        (Path(".opencode/commands"), "../.agents/commands"),
     ]
     for link, rel in pairs:
         link.parent.mkdir(parents=True, exist_ok=True)
