@@ -84,7 +84,7 @@ Concretely:
 
 - Brownfield repos that already contain a real `.claude/commands/`
   directory will hit the existing `skip: already exists` branch of
-  `_make_relative_symlink` (`hooks/post_gen.py:123-124`). Users must
+  `_make_relative_symlink` (`hooks/post_gen.py`). Users must
   manually move their existing command files into `.agents/commands/`
   and delete the old directory to opt in to the shared layout. This is
   documented in this ADR and surfaced in the post-copy message.

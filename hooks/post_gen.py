@@ -143,7 +143,7 @@ def _make_relative_symlink(link: Path, target_relative: str) -> str:
             f"or run as admin and re-run `copier update`. Otherwise, "
             f"recreate manually: `ln -s {target_relative} {link}` (from a "
             f"shell that supports symlinks). The canonical files live at "
-            f"`{target_relative.lstrip('./')}`."
+            f"`{target_relative}` (relative to `{link.parent}`)."
         )
     return f"linked: {link} -> {target_relative}"
 
