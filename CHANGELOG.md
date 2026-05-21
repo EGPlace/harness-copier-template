@@ -6,22 +6,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 for the questions and generated layout (a breaking change to a question
 name, default, or output path bumps the major version).
 
-## [Unreleased]
-
-### Changed
-
-- Slash command definitions (`/spec`, `/plan`, `/verify`) now live at
-  `.agents/commands/` and are symlinked into `.claude/commands/` and
-  `.opencode/commands/` by the post-generation hook, matching how
-  skills and subagents already work. The `.opencode/commands/README.md`
-  workaround that asked OpenCode users to flip the symlink direction by
-  hand is gone. See [ADR 0002](docs/decisions/0002-canonicalize-commands-under-agents.md)
-  for the rationale. Brownfield repos with an existing
-  `.claude/commands/` directory must move their command files into
-  `.agents/commands/` and delete the old directory before the symlink
-  can be created.
-
-## [0.2.0] – 2026-05-20
+## [0.2.0] – 2026-05-21
 
 ### Added
 
@@ -47,6 +32,16 @@ name, default, or output path bumps the major version).
 
 ### Changed
 
+- Slash command definitions (`/spec`, `/plan`, `/verify`) now live at
+  `.agents/commands/` and are symlinked into `.claude/commands/` and
+  `.opencode/commands/` by the post-generation hook, matching how
+  skills and subagents already work. The `.opencode/commands/README.md`
+  workaround that asked OpenCode users to flip the symlink direction by
+  hand is gone. See [ADR 0002](docs/decisions/0002-canonicalize-commands-under-agents.md)
+  for the rationale. Brownfield repos with an existing
+  `.claude/commands/` directory must move their command files into
+  `.agents/commands/` and delete the old directory before the symlink
+  can be created.
 - The Claude Code `Stop` hook now invokes the `task_runner`-aware
   `cmd('verify')` (e.g. `make verify` / `just verify` / the raw
   `verify_command`) instead of bypassing the runner with a fixed
