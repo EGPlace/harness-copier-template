@@ -113,38 +113,22 @@ primary_language:
 
 package_manager:
   type: str
-  help: "Package / build manager (default is picked from primary_language)"
+  help: |
+    Package / build manager. The harness ships first-class support for a
+    curated set: `uv` (Python), `pixi` (conda-ecosystem), `cmake` (C/C++).
+    Pick `other` for anything else and fill in the install steps in
+    `docs/tool-bootstrap.md` after generation. Language/runtime version
+    managers (`mise`, `asdf`) are documented separately in
+    `docs/tool-bootstrap.md` under "Activate the language toolchain".
   default: >-
     {%- if primary_language == 'python' -%}uv
-    {%- elif primary_language in ['typescript', 'javascript'] -%}pnpm
-    {%- elif primary_language == 'rust' -%}cargo
-    {%- elif primary_language == 'go' -%}go
-    {%- elif primary_language == 'java' -%}gradle
-    {%- elif primary_language == 'csharp' -%}dotnet
     {%- elif primary_language == 'cpp' -%}cmake
-    {%- else -%}make
+    {%- else -%}other
     {%- endif -%}
   choices:
     - uv
-    - pip
-    - poetry
-    - pdm
-    - hatch
-    - conda
     - pixi
-    - pnpm
-    - npm
-    - yarn
-    - bun
-    - cargo
-    - go
-    - gradle
-    - maven
-    - dotnet
     - cmake
-    - meson
-    - bazel
-    - make
     - other
 
 test_command:
@@ -153,14 +137,7 @@ test_command:
   default: >-
     {%- if primary_language == 'python' and package_manager == 'uv' -%}uv run pytest -q
     {%- elif primary_language == 'python' and package_manager == 'pixi' -%}pixi run test
-    {%- elif primary_language == 'python' -%}pytest -q
-    {%- elif primary_language in ['typescript', 'javascript'] -%}{{ package_manager }} test
-    {%- elif primary_language == 'rust' -%}cargo test
-    {%- elif primary_language == 'go' -%}go test ./...
-    {%- elif primary_language == 'java' and package_manager == 'gradle' -%}./gradlew test
-    {%- elif primary_language == 'java' -%}mvn test
-    {%- elif primary_language == 'csharp' -%}dotnet test
-    {%- elif primary_language == 'cpp' -%}ctest --output-on-failure
+    {%- elif primary_language == 'cpp' and package_manager == 'cmake' -%}ctest --output-on-failure
     {%- else -%}echo 'TODO: configure test_command in copier.yml'
     {%- endif -%}
   validator: >-
@@ -176,14 +153,7 @@ lint_command:
   default: >-
     {%- if primary_language == 'python' and package_manager == 'uv' -%}uv run ruff check .
     {%- elif primary_language == 'python' and package_manager == 'pixi' -%}pixi run lint
-    {%- elif primary_language == 'python' -%}ruff check .
-    {%- elif primary_language in ['typescript', 'javascript'] -%}{{ package_manager }} run lint
-    {%- elif primary_language == 'rust' -%}cargo clippy --all-targets -- -D warnings
-    {%- elif primary_language == 'go' -%}go vet ./... && golangci-lint run
-    {%- elif primary_language == 'java' and package_manager == 'gradle' -%}./gradlew check
-    {%- elif primary_language == 'java' -%}mvn verify -DskipTests
-    {%- elif primary_language == 'csharp' -%}dotnet format --verify-no-changes
-    {%- elif primary_language == 'cpp' -%}cmake --build build --target lint
+    {%- elif primary_language == 'cpp' and package_manager == 'cmake' -%}cmake --build build --target lint
     {%- else -%}echo 'TODO: configure lint_command in copier.yml'
     {%- endif -%}
   validator: >-
@@ -199,14 +169,7 @@ fmt_command:
   default: >-
     {%- if primary_language == 'python' and package_manager == 'uv' -%}uv run ruff format .
     {%- elif primary_language == 'python' and package_manager == 'pixi' -%}pixi run fmt
-    {%- elif primary_language == 'python' -%}ruff format .
-    {%- elif primary_language in ['typescript', 'javascript'] -%}{{ package_manager }} run format
-    {%- elif primary_language == 'rust' -%}cargo fmt
-    {%- elif primary_language == 'go' -%}gofmt -w .
-    {%- elif primary_language == 'java' and package_manager == 'gradle' -%}./gradlew spotlessApply
-    {%- elif primary_language == 'java' -%}mvn spotless:apply
-    {%- elif primary_language == 'csharp' -%}dotnet format
-    {%- elif primary_language == 'cpp' -%}cmake --build build --target format
+    {%- elif primary_language == 'cpp' and package_manager == 'cmake' -%}cmake --build build --target format
     {%- else -%}echo 'TODO: configure fmt_command in copier.yml'
     {%- endif -%}
   validator: >-

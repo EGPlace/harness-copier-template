@@ -47,127 +47,6 @@ pixi --version             # verify
 
 After install: `pixi install` to materialise the environment from
 `pixi.toml` / `pyproject.toml`.
-{%- elif package_manager == 'conda' -%}
-[`conda`](https://docs.conda.io/) — install via
-[Miniforge](https://github.com/conda-forge/miniforge#install)
-(recommended; conda-forge default channel, no Anaconda ToS issues).
-
-```sh
-conda --version            # verify
-conda env create -f environment.yml
-conda activate <env-name>
-```
-
-_Fill in: the actual env name once `environment.yml` is finalised._
-{%- elif package_manager == 'poetry' -%}
-[`poetry`](https://python-poetry.org/) — Python dependency management.
-
-```sh
-curl -sSL https://install.python-poetry.org | python3 -
-poetry --version           # verify
-poetry install
-```
-{%- elif package_manager == 'pdm' -%}
-[`pdm`](https://pdm-project.org/) — modern Python package manager.
-
-```sh
-curl -sSL https://pdm-project.org/install-pdm.py | python3 -
-pdm --version              # verify
-pdm install
-```
-{%- elif package_manager == 'hatch' -%}
-[`hatch`](https://hatch.pypa.io/) — modern Python project manager.
-
-```sh
-pipx install hatch         # or: uv tool install hatch
-hatch --version            # verify
-hatch env create
-```
-{%- elif package_manager == 'pip' -%}
-`pip` ships with Python. Use a virtualenv:
-
-```sh
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt   # or: pip install -e .
-```
-{%- elif package_manager == 'pnpm' -%}
-[`pnpm`](https://pnpm.io/) — fast, disk-efficient Node package manager.
-
-```sh
-# Via corepack (ships with Node ≥16.13):
-corepack enable pnpm
-pnpm --version             # verify
-pnpm install
-```
-{%- elif package_manager == 'npm' -%}
-`npm` ships with Node.js. Install Node via your version manager
-(`nvm`, `fnm`, `volta`, `mise`) using the version pinned in this
-repo's `.nvmrc` / `.tool-versions` (if present — otherwise pick the
-target version and create one).
-
-```sh
-node --version && npm --version   # verify
-npm install
-```
-{%- elif package_manager == 'yarn' -%}
-[`yarn`](https://yarnpkg.com/):
-
-```sh
-corepack enable yarn       # Yarn ≥2 via corepack
-yarn --version             # verify
-yarn install
-```
-{%- elif package_manager == 'bun' -%}
-[`bun`](https://bun.sh/):
-
-```sh
-curl -fsSL https://bun.sh/install | bash
-bun --version              # verify
-bun install
-```
-{%- elif package_manager == 'cargo' -%}
-`cargo` ships with the Rust toolchain via [`rustup`](https://rustup.rs/):
-
-```sh
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-rustup show                # honours rust-toolchain.toml if present
-cargo build
-```
-{%- elif package_manager == 'go' -%}
-Install Go from [go.dev/dl](https://go.dev/dl/) or via your version
-manager (the required version is pinned in the `go` directive of `go.mod`).
-
-```sh
-go version                 # verify
-go mod download
-```
-{%- elif package_manager == 'gradle' -%}
-Use the project's Gradle wrapper (`./gradlew`) — no system-wide Gradle
-install needed. You do need a JDK matching `.tool-versions` /
-`mise.toml`.
-
-```sh
-./gradlew --version        # verify
-./gradlew build
-```
-{%- elif package_manager == 'maven' -%}
-Install Maven (`brew install maven`, your OS package manager, or
-[maven.apache.org](https://maven.apache.org/install.html)) and a JDK
-matching `.tool-versions` / `mise.toml`.
-
-```sh
-mvn --version              # verify
-mvn verify
-```
-{%- elif package_manager == 'dotnet' -%}
-Install the [.NET SDK](https://dotnet.microsoft.com/download) matching
-`global.json` (if present).
-
-```sh
-dotnet --info              # verify
-dotnet restore
-```
 {%- elif package_manager == 'cmake' -%}
 Install CMake via your OS package manager (`brew install cmake`,
 `apt install cmake`, etc.) plus a C/C++ toolchain.
@@ -176,33 +55,6 @@ Install CMake via your OS package manager (`brew install cmake`,
 cmake --version            # verify
 cmake -B build && cmake --build build
 ```
-{%- elif package_manager == 'meson' -%}
-```sh
-pipx install meson ninja
-meson --version            # verify
-meson setup build && meson compile -C build
-```
-{%- elif package_manager == 'bazel' -%}
-Install [Bazelisk](https://github.com/bazelbuild/bazelisk) (recommended)
-— it honours the version pinned in `.bazelversion`. The official release
-binary is called `bazelisk`; create a `bazel` symlink (or use the
-commands below verbatim) so commands elsewhere in the docs work.
-
-```sh
-# macOS:  brew install bazelisk
-# Linux:  https://github.com/bazelbuild/bazelisk/releases
-# Optional shim so `bazel` resolves to bazelisk:
-#   ln -s "$(command -v bazelisk)" ~/.local/bin/bazel
-bazelisk --version         # verify
-bazelisk build //...
-```
-{%- elif package_manager == 'make' -%}
-`make` ships pre-installed on most macOS and Linux systems. On Windows,
-install GNU Make via [MSYS2](https://www.msys2.org/), Chocolatey
-(`choco install make`), Scoop, or run under WSL. Then install whatever
-language-specific toolchain the Makefile targets shell out to.
-
-_Fill in: which compiler / interpreter / runtime versions are required._
 {%- else -%}
 _Fill in: how to install `{{ package_manager }}` on macOS, Linux, and
 Windows, with a one-line verification command and the project's
@@ -212,10 +64,12 @@ dependency-install command._
 ## Activate the language toolchain
 
 If this repo pins language versions in `.tool-versions` / `mise.toml`
-(the recommended single source of truth — neither file is generated
-by the template, so add one as part of project setup),
-[`mise`](https://mise.jdx.dev/) is the recommended way to honour those
-pins:
+(the recommended single source of truth — neither file is generated by
+the template, so add one as part of project setup), use a runtime
+version manager to install the pinned versions. Two equally good
+options:
+
+### Option A — [`mise`](https://mise.jdx.dev/) (recommended)
 
 ```sh
 # Install mise (one-time, machine-level):
@@ -229,8 +83,22 @@ mise install                   # installs every pinned tool
 mise current                   # show resolved versions
 ```
 
-If you prefer `asdf` or per-language version managers (`pyenv`, `nvm`,
-`rustup`, `rbenv`, …), use the same versions listed in `.tool-versions`.
+### Option B — [`asdf`](https://asdf-vm.com/)
+
+```sh
+# Install asdf (macOS):  brew install asdf
+# Or follow https://asdf-vm.com/guide/getting-started.html
+
+# Add language plugins (one-time, per language):
+asdf plugin add python         # then: asdf plugin add nodejs, etc.
+
+# Inside the repo (reads .tool-versions):
+asdf install                   # installs every pinned version
+asdf current                   # show resolved versions
+```
+
+Per-language version managers (`pyenv`, `nvm`, `rustup`, `rbenv`, …)
+also work — use the same versions listed in `.tool-versions`.
 
 ## Verify the bootstrap
 

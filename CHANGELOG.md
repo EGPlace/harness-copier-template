@@ -18,13 +18,32 @@ name, default, or output path bumps the major version).
   where the convention actually has to hold (PR title vs. every branch
   commit).
 - New file **`docs/tool-bootstrap.md`** — always-generated, pre-filled
-  per `package_manager` with install snippets (uv, pixi, conda, poetry,
-  pdm, hatch, pip, pnpm, npm, yarn, bun, cargo, go, gradle, maven,
-  dotnet, cmake, meson, bazel, make) plus a `mise` toolchain-activation
-  section and a verification step. Added to `_skip_if_exists` so
-  brown-field repos keep their existing file.
+  per `package_manager` with install snippets for the curated set
+  (`uv`, `pixi`, `cmake`) plus a generic `_Fill in:_` arm for `other`.
+  Includes an "Activate the language toolchain" section that gives
+  [`mise`](https://mise.jdx.dev/) and [`asdf`](https://asdf-vm.com/)
+  equal billing as runtime version managers, plus a verification step
+  that uses the runner-aware `cmd('verify')` macro. Added to
+  `_skip_if_exists` so brown-field repos keep their existing file.
 - `AGENTS.md` `## Stack` section gets a "New-machine setup" pointer to
   the new doc.
+
+### Removed (breaking)
+
+- `package_manager` choices narrowed from 21 options to a curated set:
+  `uv` (Python), `pixi` (conda-ecosystem), `cmake` (C/C++), and
+  `other`. Removed: `pip`, `poetry`, `pdm`, `hatch`, `conda`, `pnpm`,
+  `npm`, `yarn`, `bun`, `cargo`, `go`, `gradle`, `maven`, `dotnet`,
+  `meson`, `bazel`, `make`. Pick `other` for anything not in the
+  curated set and fill in the install steps in
+  `docs/tool-bootstrap.md` after generation. Existing projects on
+  `copier update` that previously selected a removed value must
+  re-answer the question with one of the new choices.
+- `test_command` / `lint_command` / `fmt_command` defaults: arms for
+  the removed package managers / languages were dropped; the
+  remaining recognised combinations are `python+uv`, `python+pixi`,
+  and `cpp+cmake`. Everything else falls through to
+  `echo 'TODO: configure ..._command in copier.yml'`.
 
 ### Changed
 
