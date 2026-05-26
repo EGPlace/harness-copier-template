@@ -79,6 +79,10 @@ For Claude Code users:
 {%- elif pr_merge_strategy in ('merge', 'rebase') %}
   Every branch commit lands in history under the repo's merge strategy,
   so each one you push must follow the convention.
+{%- else %}
+  Where it applies depends on the repo's merge strategy: squash-merge
+  → PR title only; merge-commit or rebase-merge → every branch commit.
+  Check the repo's GitHub merge settings or ask a maintainer.
 {%- endif %}
 {%- else %}
 - Commit messages: imperative mood, first line ≤72 chars, no trailing

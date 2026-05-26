@@ -19,7 +19,7 @@
 _Fill in: any additional system-level tools the project needs
 (Docker, a database client, `protoc`, etc.) with a one-line role for each._
 
-## Install `{{ package_manager }}`
+## Install {% if package_manager == 'other' %}your package manager{% else %}`{{ package_manager }}`{% endif %}
 
 {% if package_manager == 'uv' -%}
 [`uv`](https://docs.astral.sh/uv/) — fast Python package & project manager.
@@ -56,9 +56,9 @@ cmake --version            # verify
 cmake -B build && cmake --build build
 ```
 {%- else -%}
-_Fill in: how to install `{{ package_manager }}` on macOS, Linux, and
-Windows, with a one-line verification command and the project's
-dependency-install command._
+_Fill in: the name of your project / package manager and how to install
+it on macOS, Linux, and Windows, with a one-line verification command
+and the project's dependency-install command._
 {%- endif %}
 
 ## Activate the language toolchain
