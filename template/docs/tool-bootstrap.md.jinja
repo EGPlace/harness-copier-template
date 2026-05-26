@@ -34,8 +34,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv --version   # verify
 ```
 
-After install: `uv sync` to materialise the project environment from
-`pyproject.toml` + `uv.lock`.
+After install: `uv sync` materialises the project environment from
+`pyproject.toml` and creates/updates `uv.lock` (or uses it when present).
 {%- elif package_manager == 'pixi' -%}
 [`pixi`](https://pixi.sh) — conda-ecosystem project manager.
 
