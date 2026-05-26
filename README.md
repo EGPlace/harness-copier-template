@@ -18,7 +18,7 @@ your-repo/
 ├─ .gitignore                        # greenfield: full; brownfield: merged
 ├─ docs/
 │  ├─ architecture.md
-│  ├─ style.md                        # incl. commit-message convention
+│  ├─ style.md                        # greenfield: incl. commit-message convention
 │  ├─ testing.md
 │  ├─ tool-bootstrap.md               # per-package-manager install instructions
 │  └─ adr/0001-record-architecture-decisions.md   # if include_example_adr
@@ -73,7 +73,7 @@ The template asks you:
 | `verify_command`          | What hooks and `/verify` run; default `./scripts/verify.sh` |
 | `generate_scripts`        | Generate `scripts/` placeholders (`verify.sh`, `fmt-file.sh`); default `true` |
 | `license`                 | SPDX id                                                  |
-| `commit_convention`       | `conventional` (default) \| `freeform`; drives the commit-messages section in `docs/style.md` |
+| `commit_convention`       | `conventional` (default) \| `freeform`; drives the commit-message bullet in `AGENTS.md` (always updated) and the matching section in `docs/style.md` (greenfield-only — `_skip_if_exists`) |
 | `pr_merge_strategy`       | `squash` (default) \| `merge` \| `rebase` \| `unknown`; tailors where the convention applies |
 | `cursor`                  | Off by default                                           |
 | `copilot`                 | Off by default                                           |
