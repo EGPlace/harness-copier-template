@@ -13,6 +13,7 @@
 - Package / build manager: **{{ package_manager }}**
 - License: {{ license }}
 - Tool versions live in `.tool-versions` / `mise.toml` (single source of truth)
+- New-machine setup: [`docs/tool-bootstrap.md`](docs/tool-bootstrap.md)
 
 ## Commands (prefer these over guessing)
 
@@ -63,7 +64,7 @@ For Claude Code users:
 
 - Code style: see `docs/style.md`. One worked example > a page of prose.
 - Tests are the spec. If you change behaviour, change a test first.
-- Commit messages: imperative mood, first line ≤72 chars, no trailing period.
+- Commit messages: see [`docs/style.md`](docs/style.md#commit-messages).
 - Branch names: `<initials>/<slug>` for personal branches; bare slug for
   shared feature branches.
 

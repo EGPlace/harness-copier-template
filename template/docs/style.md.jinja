@@ -22,3 +22,53 @@ Example:
 > **Don't** catch a bare exception to swallow it.
 > **Do** catch the narrowest type that you can recover from, and re-raise
 > with `from` so the stack trace stays intact.
+
+## Commit messages
+
+{% if commit_convention == 'conventional' -%}
+This project uses **[Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)**.
+
+Format: `<type>(<optional scope>): <description>` — description in
+imperative mood, no trailing period, first line ≤72 chars.
+
+Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`,
+`build`, `ci`, `perf`, `style`, `revert`. Mark breaking changes with
+`!` after the type/scope (e.g. `feat(api)!: drop v1 endpoints`) or a
+`BREAKING CHANGE:` footer.
+
+Examples:
+
+    feat(auth): add OIDC token refresh
+    fix: handle empty cart in checkout summary
+    chore!: drop Node 18 support
+    docs(adr): record decision to adopt uv
+
+### Where the convention applies
+
+{% if pr_merge_strategy == 'squash' -%}
+PRs are **squash-merged**, so only the squash commit lands in history.
+Put the Conventional Commits header in the **PR title**. Individual
+branch commits during work can be freeform working notes.
+{%- elif pr_merge_strategy == 'merge' -%}
+PRs land as a **merge commit plus every branch commit verbatim**, so
+each branch commit you push must follow the convention. Rebase or
+amend locally to clean up WIP commits before pushing.
+{%- elif pr_merge_strategy == 'rebase' -%}
+PRs are **rebase-merged**, so every branch commit lands verbatim and
+each one must follow the convention. Rebase or amend locally to clean
+up WIP commits before pushing.
+{%- else -%}
+Where the format applies depends on the repo's merge strategy:
+squash-merge → PR title only; merge-commit or rebase-merge → every
+branch commit. Check the repo's GitHub merge settings or ask a
+maintainer.
+{%- endif %}
+{%- else -%}
+- Imperative mood ("add X", not "added X" or "adds X").
+- First line ≤72 chars; no trailing period.
+- Body (optional) wraps at 72 chars; explains *why*, not *what*.
+{% if pr_merge_strategy == 'squash' -%}
+- PRs are squash-merged, so the PR title is what lands in history —
+  make it a good summary line.
+{%- endif %}
+{%- endif %}

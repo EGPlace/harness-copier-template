@@ -6,6 +6,38 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 for the questions and generated layout (a breaking change to a question
 name, default, or output path bumps the major version).
 
+## [0.3.0] – 2026-05-26
+
+### Added
+
+- New question **`commit_convention`** (`conventional` | `freeform`,
+  default `conventional`) — surfaces Conventional Commits 1.0.0
+  guidance in `docs/style.md` and a pointer in `AGENTS.md`.
+- New question **`pr_merge_strategy`** (`squash` | `merge` | `rebase` |
+  `unknown`, default `squash`) — tailors the commit-message guidance to
+  where the convention actually has to hold (PR title vs. every branch
+  commit).
+- New file **`docs/tool-bootstrap.md`** — always-generated, pre-filled
+  per `package_manager` with install snippets (uv, pixi, conda, poetry,
+  pdm, hatch, pip, pnpm, npm, yarn, bun, cargo, go, gradle, maven,
+  dotnet, cmake, meson, bazel, make) plus a `mise` toolchain-activation
+  section and a verification step. Added to `_skip_if_exists` so
+  brown-field repos keep their existing file.
+- `AGENTS.md` `## Stack` section gets a "New-machine setup" pointer to
+  the new doc.
+
+### Changed
+
+- The single commit-message rule in `AGENTS.md` is replaced with a
+  one-line pointer to `docs/style.md#commit-messages`. The full
+  guidance lives in `docs/style.md` and varies by `commit_convention`
+  + `pr_merge_strategy`.
+- Default behaviour: new projects render with Conventional Commits +
+  squash-merge guidance. Existing projects running `copier update`
+  will see a diff on `AGENTS.md` and `docs/style.md` unless they
+  answer `commit_convention=freeform` (which keeps the previous
+  short-form rules).
+
 ## [0.2.0] – 2026-05-21
 
 ### Added

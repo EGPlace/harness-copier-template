@@ -34,6 +34,7 @@ _skip_if_exists:
   - "docs/architecture.md"
   - "docs/style.md"
   - "docs/testing.md"
+  - "docs/tool-bootstrap.md"
 
 # Optional post-generation tasks. The brown-field merger hook (see hooks/) runs
 # unconditionally and appends gitignore entries idempotently when an existing
@@ -289,6 +290,49 @@ license:
     - MPL-2.0
     - Proprietary
     - Other
+
+# ---------------------------------------------------------------------------
+# Workflow conventions
+# ---------------------------------------------------------------------------
+
+commit_convention:
+  type: str
+  help: |
+    Commit-message convention surfaced to agents and humans in
+    `docs/style.md`.
+      - conventional: Conventional Commits 1.0.0
+                      (https://www.conventionalcommits.org/en/v1.0.0/).
+                      Required if your release tooling parses commit
+                      messages (semantic-release, release-please,
+                      changesets, ...).
+      - freeform:     imperative mood, ≤72-char first line, no trailing
+                      period (the historic harness default).
+    Where the convention applies depends on `pr_merge_strategy`.
+  default: conventional
+  choices:
+    - conventional
+    - freeform
+
+pr_merge_strategy:
+  type: str
+  help: |
+    How pull requests land on the default branch. Changes which commits
+    actually end up in history, and therefore where the commit-message
+    guidance applies:
+      - squash:  the PR's squash commit (usually the PR title) is the
+                 only commit that lands. Branch commits during work
+                 are freeform working notes.
+      - merge:   a merge commit + every branch commit lands verbatim.
+                 Each branch commit must follow the convention.
+      - rebase:  every branch commit lands verbatim, no merge commit.
+                 Each branch commit must follow the convention.
+      - unknown: don't tailor guidance; show all three modes.
+  default: squash
+  choices:
+    - squash
+    - merge
+    - rebase
+    - unknown
 
 # ---------------------------------------------------------------------------
 # Optional modules (gated; everything off-by-default except Claude + OpenCode)
