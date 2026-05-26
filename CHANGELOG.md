@@ -28,15 +28,26 @@ name, default, or output path bumps the major version).
 
 ### Changed
 
-- The single commit-message rule in `AGENTS.md` is replaced with a
-  one-line pointer to `docs/style.md#commit-messages`. The full
-  guidance lives in `docs/style.md` and varies by `commit_convention`
-  + `pr_merge_strategy`.
+- The single commit-message rule in `AGENTS.md` is rewritten into a
+  short, self-sufficient summary that varies by `commit_convention`
+  and points at `docs/style.md#commit-messages` for the full type
+  list, examples, and merge-strategy-specific guidance.
 - Default behaviour: new projects render with Conventional Commits +
-  squash-merge guidance. Existing projects running `copier update`
-  will see a diff on `AGENTS.md` and `docs/style.md` unless they
-  answer `commit_convention=freeform` (which keeps the previous
-  short-form rules).
+  squash-merge guidance.
+
+### Upgrade notes
+
+- `docs/style.md` is in `_skip_if_exists`, so an existing
+  `docs/style.md` is preserved on `copier update` and will *not*
+  pick up the new `## Commit messages` section automatically. The
+  rewritten `AGENTS.md` bullet is self-sufficient, but merge the
+  new section in from the template manually if you want the deeper
+  guidance in `docs/style.md` too.
+- `AGENTS.md` is *not* in `_skip_if_exists`, so existing projects
+  running `copier update` will see a diff on it (accept it to pick
+  up the new commit-message wording, or answer
+  `commit_convention=freeform` to keep something close to the
+  previous short-form rule).
 
 ## [0.2.0] – 2026-05-21
 

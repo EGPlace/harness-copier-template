@@ -64,7 +64,17 @@ For Claude Code users:
 
 - Code style: see `docs/style.md`. One worked example > a page of prose.
 - Tests are the spec. If you change behaviour, change a test first.
-- Commit messages: see [`docs/style.md`](docs/style.md#commit-messages).
+{%- if commit_convention == 'conventional' %}
+- Commit messages: **Conventional Commits 1.0.0** —
+  `<type>(<optional scope>): <description>`, imperative mood, ≤72-char
+  first line, no trailing period. See
+  [`docs/style.md`](docs/style.md#commit-messages) for the full type
+  list, examples, and where the convention applies under the repo's
+  merge strategy.
+{%- else %}
+- Commit messages: imperative mood, first line ≤72 chars, no trailing
+  period. See [`docs/style.md`](docs/style.md#commit-messages) for more.
+{%- endif %}
 - Branch names: `<initials>/<slug>` for personal branches; bare slug for
   shared feature branches.
 

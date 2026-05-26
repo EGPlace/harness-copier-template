@@ -1,4 +1,5 @@
 # Tool bootstrap
+{%- from '_macros.jinja' import cmd with context %}
 
 > How to install and activate the project's core tools so the commands
 > in [`AGENTS.md`](../AGENTS.md) actually work. This file is for
@@ -225,11 +226,11 @@ If you prefer `asdf` or per-language version managers (`pyenv`, `nvm`,
 Once the steps above are done, run the canonical verification gate:
 
 ```sh
-{{ verify_command }}
+{{ cmd('verify') }}
 ```
 
 If it succeeds on a fresh clone, the bootstrap worked.
 
 _Fill in: any extra one-time setup commands (database migrations,
-`.env` copy, code generation) needed before `{{ verify_command }}`
+`.env` copy, code generation) needed before `{{ cmd('verify') }}`
 will pass._
