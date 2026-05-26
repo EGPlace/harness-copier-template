@@ -181,17 +181,23 @@ meson setup build && meson compile -C build
 ```
 {%- elif package_manager == 'bazel' -%}
 Install [Bazelisk](https://github.com/bazelbuild/bazelisk) (recommended)
-— it honours the version pinned in `.bazelversion`.
+— it honours the version pinned in `.bazelversion`. The official release
+binary is called `bazelisk`; create a `bazel` symlink (or use the
+commands below verbatim) so commands elsewhere in the docs work.
 
 ```sh
 # macOS:  brew install bazelisk
 # Linux:  https://github.com/bazelbuild/bazelisk/releases
-bazel --version            # verify
-bazel build //...
+# Optional shim so `bazel` resolves to bazelisk:
+#   ln -s "$(command -v bazelisk)" ~/.local/bin/bazel
+bazelisk --version         # verify
+bazelisk build //...
 ```
 {%- elif package_manager == 'make' -%}
-`make` is universally available. Install whatever language-specific
-toolchain the Makefile targets shell out to.
+`make` ships pre-installed on most macOS and Linux systems. On Windows,
+install GNU Make via [MSYS2](https://www.msys2.org/), Chocolatey
+(`choco install make`), Scoop, or run under WSL. Then install whatever
+language-specific toolchain the Makefile targets shell out to.
 
 _Fill in: which compiler / interpreter / runtime versions are required._
 {%- else -%}
@@ -208,7 +214,7 @@ The recommended way to honour those pins is
 
 ```sh
 # Install mise (one-time, machine-level):
-curl https://mise.run | sh
+curl -fsSL https://mise.run | sh
 
 # Activate in your shell (add to ~/.bashrc / ~/.zshrc / config.fish):
 eval "$(mise activate bash)"   # or: zsh / fish
