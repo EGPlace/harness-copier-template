@@ -6,7 +6,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 for the questions and generated layout (a breaking change to a question
 name, default, or output path bumps the major version).
 
-## [0.3.0] – 2026-05-26
+## [Unreleased]
+
+_Target version: 0.3.0. Not yet tagged — further PRs may land here
+before the release._
+
 
 ### Added
 
@@ -53,10 +57,13 @@ name, default, or output path bumps the major version).
   breaking-change syntax, and merge-strategy-specific note about where
   the convention applies). It no longer relies on `docs/style.md`
   being up-to-date.
-- `AGENTS.md` `## Stack` softens "Tool versions live in
-  `.tool-versions` / `mise.toml`" to "pin them in … (the recommended
-  single source of truth — see `docs/tool-bootstrap.md`)", since the
-  template does not generate either pin file.
+- `AGENTS.md` `## Stack` reworks the "Tool versions" bullet to spell
+  out the pin-file trade-off — `.tool-versions` (read by both `asdf`
+  and `mise`, recommended for cross-tool compatibility) vs.
+  `mise.toml` (read only by `mise`, richer config) — instead of
+  calling them a "single source of truth". Mirrored in
+  `docs/tool-bootstrap.md`. The template does not generate either pin
+  file; pick one as part of project setup.
 - Default behaviour: new projects render with Conventional Commits +
   squash-merge guidance.
 
@@ -168,6 +175,6 @@ name, default, or output path bumps the major version).
   `.gitignore` and symlinks shared agent assets (`skills/`,
   `subagents/`) into `.claude/` and `.opencode/`.
 
-[0.3.0]: https://github.com/grAItools/harness-copier-template/releases/tag/v0.3.0
+[Unreleased]: https://github.com/grAItools/harness-copier-template/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/grAItools/harness-copier-template/releases/tag/v0.2.0
 [0.1.0]: https://github.com/grAItools/harness-copier-template/releases/tag/v0.1.0
