@@ -10,9 +10,11 @@
 
 - **{{ package_manager }}** — project / package manager. Install
   instructions below.
-- Language runtime for **{{ primary_language }}** — version pinned in
-  `.tool-versions` / `mise.toml` (single source of truth; see
-  "Activate the language toolchain" below).
+- Language runtime for **{{ primary_language }}** — pin the required
+  version in `.tool-versions` / `mise.toml` (the recommended single
+  source of truth; see "Activate the language toolchain" below).
+  _Fill in: the required version once chosen — the template does not
+  generate either file._
 
 _Fill in: any additional system-level tools the project needs
 (Docker, a database client, `protoc`, etc.) with a one-line role for each._
@@ -100,8 +102,9 @@ pnpm install
 ```
 {%- elif package_manager == 'npm' -%}
 `npm` ships with Node.js. Install Node via your version manager
-(`nvm`, `fnm`, `volta`, `mise`) using the version pinned in
-`.nvmrc` / `.tool-versions`.
+(`nvm`, `fnm`, `volta`, `mise`) using the version pinned in this
+repo's `.nvmrc` / `.tool-versions` (if present — otherwise pick the
+target version and create one).
 
 ```sh
 node --version && npm --version   # verify
@@ -208,9 +211,11 @@ dependency-install command._
 
 ## Activate the language toolchain
 
-This project pins language versions in `.tool-versions` / `mise.toml`.
-The recommended way to honour those pins is
-[`mise`](https://mise.jdx.dev/):
+If this repo pins language versions in `.tool-versions` / `mise.toml`
+(the recommended single source of truth — neither file is generated
+by the template, so add one as part of project setup),
+[`mise`](https://mise.jdx.dev/) is the recommended way to honour those
+pins:
 
 ```sh
 # Install mise (one-time, machine-level):

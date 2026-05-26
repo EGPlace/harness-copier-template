@@ -12,7 +12,9 @@
 - Language: **{{ primary_language }}**
 - Package / build manager: **{{ package_manager }}**
 - License: {{ license }}
-- Tool versions live in `.tool-versions` / `mise.toml` (single source of truth)
+- Tool versions: pin them in `.tool-versions` / `mise.toml` (the
+  recommended single source of truth — see
+  [`docs/tool-bootstrap.md`](docs/tool-bootstrap.md))
 - New-machine setup: [`docs/tool-bootstrap.md`](docs/tool-bootstrap.md)
 
 ## Commands (prefer these over guessing)
@@ -67,12 +69,20 @@ For Claude Code users:
 {%- if commit_convention == 'conventional' %}
 - Commit messages: **Conventional Commits 1.0.0** —
   `<type>(<optional scope>): <description>`, imperative mood, ≤72-char
-  first line, no trailing period. See
-  [`docs/style.md`](docs/style.md) for the full type list, examples,
-  and where the convention applies under the repo's merge strategy.
+  first line, no trailing period. Common types: `feat`, `fix`, `docs`,
+  `refactor`, `test`, `chore`, `build`, `ci`, `perf`, `style`, `revert`;
+  mark breaking changes with `!` after the type/scope (e.g.
+  `feat(api)!: …`) or a `BREAKING CHANGE:` footer.
+{%- if pr_merge_strategy == 'squash' %}
+  PRs are squash-merged, so put the Conventional Commits header in the
+  **PR title** — branch commits during work can be freeform notes.
+{%- elif pr_merge_strategy in ('merge', 'rebase') %}
+  Every branch commit lands in history under the repo's merge strategy,
+  so each one you push must follow the convention.
+{%- endif %}
 {%- else %}
 - Commit messages: imperative mood, first line ≤72 chars, no trailing
-  period. See [`docs/style.md`](docs/style.md) for more.
+  period.
 {%- endif %}
 - Branch names: `<initials>/<slug>` for personal branches; bare slug for
   shared feature branches.

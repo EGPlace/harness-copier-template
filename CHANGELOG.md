@@ -29,25 +29,34 @@ name, default, or output path bumps the major version).
 ### Changed
 
 - The single commit-message rule in `AGENTS.md` is rewritten into a
-  short, self-sufficient summary that varies by `commit_convention`
-  and points at `docs/style.md#commit-messages` for the full type
-  list, examples, and merge-strategy-specific guidance.
+  self-contained summary that varies by `commit_convention` and
+  `pr_merge_strategy` (Conventional Commits format, common type list,
+  breaking-change syntax, and merge-strategy-specific note about where
+  the convention applies). It no longer relies on `docs/style.md`
+  being up-to-date.
+- `AGENTS.md` `## Stack` softens "Tool versions live in
+  `.tool-versions` / `mise.toml`" to "pin them in … (the recommended
+  single source of truth — see `docs/tool-bootstrap.md`)", since the
+  template does not generate either pin file.
 - Default behaviour: new projects render with Conventional Commits +
   squash-merge guidance.
 
 ### Upgrade notes
 
-- `docs/style.md` is in `_skip_if_exists`, so an existing
-  `docs/style.md` is preserved on `copier update` and will *not*
-  pick up the new `## Commit messages` section automatically. The
-  rewritten `AGENTS.md` bullet is self-sufficient, but merge the
-  new section in from the template manually if you want the deeper
-  guidance in `docs/style.md` too.
 - `AGENTS.md` is *not* in `_skip_if_exists`, so existing projects
   running `copier update` will see a diff on it (accept it to pick
   up the new commit-message wording, or answer
   `commit_convention=freeform` to keep something close to the
   previous short-form rule).
+- `docs/style.md` *is* in `_skip_if_exists`. For greenfield repos,
+  it is generated with a new `## Commit messages` section that mirrors
+  the AGENTS.md guidance. For existing repos with their own
+  `docs/style.md`, it is preserved on `copier update`; the AGENTS.md
+  bullet is self-sufficient, so merging the new style.md section is
+  optional.
+- `docs/tool-bootstrap.md` is always generated on greenfield and added
+  to `_skip_if_exists` for brownfield, matching the existing
+  `docs/architecture.md` / `docs/style.md` / `docs/testing.md` pattern.
 
 ## [0.2.0] – 2026-05-21
 
