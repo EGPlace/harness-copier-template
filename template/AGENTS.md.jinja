@@ -12,9 +12,10 @@
 - Language: **{{ primary_language }}**
 - Package / build manager: **{{ package_manager }}**
 - License: {{ license }}
-- Tool versions: pin them in `.tool-versions` / `mise.toml` (the
-  recommended single source of truth — see
-  [`docs/tool-bootstrap.md`](docs/tool-bootstrap.md))
+- Tool versions: pick one pin file as the source of truth —
+  `.tool-versions` (read by both `asdf` and `mise`, recommended for
+  cross-tool compatibility) or `mise.toml` (read only by `mise`, but
+  richer config). See [`docs/tool-bootstrap.md`](docs/tool-bootstrap.md).
 - New-machine setup: [`docs/tool-bootstrap.md`](docs/tool-bootstrap.md)
 
 ## Commands (prefer these over guessing)
@@ -68,11 +69,13 @@ For Claude Code users:
 - Tests are the spec. If you change behaviour, change a test first.
 {%- if commit_convention == 'conventional' %}
 - Commit messages: **Conventional Commits 1.0.0** —
-  `<type>(<optional scope>): <description>`, imperative mood, ≤72-char
-  first line, no trailing period. Common types: `feat`, `fix`, `docs`,
-  `refactor`, `test`, `chore`, `build`, `ci`, `perf`, `style`, `revert`;
-  mark breaking changes with `!` after the type/scope (e.g.
-  `feat(api)!: …`) or a `BREAKING CHANGE:` footer.
+  `<type>[optional scope]: <description>` (the entire `(scope)`
+  segment is optional, parentheses included; a no-scope commit is
+  just `<type>: <description>`). Imperative mood, ≤72-char first
+  line, no trailing period. Common types: `feat`, `fix`, `docs`,
+  `refactor`, `test`, `chore`, `build`, `ci`, `perf`, `style`,
+  `revert`; mark breaking changes with `!` after the type/scope
+  (e.g. `feat(api)!: …`) or a `BREAKING CHANGE:` footer.
 {%- if pr_merge_strategy == 'squash' %}
   PRs are squash-merged, so put the Conventional Commits header in the
   **PR title** — branch commits during work can be freeform notes.
