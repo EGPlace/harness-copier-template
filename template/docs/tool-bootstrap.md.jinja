@@ -8,13 +8,13 @@
 
 ## Required tools
 
-- **{{ package_manager }}** — project / build tool. Install
-  instructions below.
-- Language runtime for **{{ primary_language }}** — pick one pin file
-  as the source of truth: `.tool-versions` (read by both `asdf` and
-  `mise`, recommended if you want cross-tool compatibility) or
-  `mise.toml` (read only by `mise`, but richer config). See
-  "Activate the language toolchain" below.
+- **{% if package_manager == 'other' %}your package manager{% else %}{{ package_manager }}{% endif %}** — project / build tool.
+  Install instructions below.
+- Language runtime for **{% if primary_language == 'other' %}your chosen language{% else %}{{ primary_language }}{% endif %}** —
+  pick one pin file as the source of truth: `.tool-versions` (read by
+  both `asdf` and `mise`, recommended if you want cross-tool
+  compatibility) or `mise.toml` (read only by `mise`, but richer
+  config). See "Activate the language toolchain" below.
   _Fill in: the required version once chosen — the template does not
   generate either file._
 
