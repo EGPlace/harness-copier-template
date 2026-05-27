@@ -24,9 +24,9 @@ your-repo/
 │  ├─ babysit-copilot-review.md       # if copilot_review_loop — operator guide for the loop
 │  └─ adr/0001-record-architecture-decisions.md   # if include_example_adr
 ├─ specs/                            # per-feature; YYYY-MM-example/ if opted in
-├─ scripts/                          # shell entry points (if generate_scripts)
-│  ├─ verify.sh                      # default implementation of verify_command (canonical lint+test gate)
-│  ├─ fmt-file.sh                    # per-file formatter slot for the PostToolUse hook
+├─ scripts/                          # shell entry points (if generate_scripts or copilot_review_loop)
+│  ├─ verify.sh                      # if generate_scripts — default verify_command (canonical lint+test gate)
+│  ├─ fmt-file.sh                    # if generate_scripts — per-file formatter slot for the PostToolUse hook
 │  ├─ babysit_copilot_review.py      # if copilot_review_loop — Python driver for /babysit-copilot-review
 │  ├─ gh_resolve_thread.sh           # if copilot_review_loop — GraphQL resolveReviewThread wrapper
 │  └─ gh_rerequest_copilot.sh        # if copilot_review_loop — GraphQL requestReviews(botIds:) wrapper

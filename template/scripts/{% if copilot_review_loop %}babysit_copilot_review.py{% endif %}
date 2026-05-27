@@ -99,7 +99,7 @@ def _ensure_gh() -> None:
         sys.exit(2)
 
 
-def _resolve_pr(pr_arg: str) -> int:
+def _resolve_pr(pr_arg: str, *, dry_run: bool = False) -> int:
     if pr_arg != "auto":
         try:
             return int(pr_arg)
@@ -107,6 +107,12 @@ def _resolve_pr(pr_arg: str) -> int:
             print(f"error: --pr must be an integer or 'auto', got: {pr_arg!r}",
                   file=sys.stderr)
             sys.exit(2)
+    if dry_run:
+        # Don't call `gh` under --dry-run — the flag's contract is "no
+        # gh invocations". Use a placeholder so the rest of the dry-run
+        # path renders meaningfully; callers should pass an explicit
+        # --pr number for a realistic dry-run.
+        return 0
     res = _run(["gh", "pr", "view", "--json", "number", "-q", ".number"],
                check=False)
     if res.returncode != 0 or not res.stdout.strip():
@@ -528,7 +534,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.dry_run:
         _ensure_gh()
-    pr = _resolve_pr(args.pr)
+    pr = _resolve_pr(args.pr, dry_run=args.dry_run)
     owner, repo = (("dry", "run") if args.dry_run
                    else _resolve_owner_repo())
 
