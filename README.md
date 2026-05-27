@@ -7,6 +7,16 @@ repository layout with a thin Claude Code + OpenCode overlay enabled by
 default, and everything else (Cursor, GitHub Copilot, MCP, example
 ADR/skill/subagent, Claude hooks) opt-in.
 
+The harness ships a four-phase, role-based workflow — **Product Owner**
+(`/spec`) → **Architect** (`/plan`) → **Developer** (`/build`) →
+**Reviewer** (`/verify`) — with one subagent definition per role under
+`.agents/subagents/`. Each phase stops for user review before the next
+begins, and each role has a tight tool allowlist (PO/Architect can
+only write to `specs/`, Developer gets full edit + bash, Reviewer is
+read-only). The pattern follows the role-handoff conventions used by
+MetaGPT, BMAD Method, GitHub Spec Kit, and CrewAI, normalised to the
+`AGENTS.md` + `.agents/` layout this template already uses.
+
 ## What it generates
 
 ```
@@ -28,8 +38,13 @@ your-repo/
 │  └─ fmt-file.sh                    # per-file formatter slot for the PostToolUse hook
 ├─ .agents/                          # vendor-neutral shared assets
 │  ├─ skills/verify/SKILL.md         # if include_example_skill
-│  ├─ subagents/explorer.md          # if include_example_subagent
-│  └─ commands/{spec,plan,verify}.md
+│  ├─ subagents/
+│  │  ├─ product-owner.md            # always — paired with /spec
+│  │  ├─ architect.md                # always — paired with /plan
+│  │  ├─ developer.md                # always — paired with /build
+│  │  ├─ reviewer.md                 # always — paired with /verify
+│  │  └─ explorer.md                 # if include_example_subagent
+│  └─ commands/{spec,plan,build,verify}.md
 ├─ .claude/                          # Claude Code (always)
 │  ├─ settings.json                  # permissions (+ hooks if opted in)
 │  ├─ commands/  -> ../.agents/commands       (symlink, post-gen)

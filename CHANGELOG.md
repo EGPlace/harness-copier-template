@@ -14,6 +14,16 @@ before the release._
 
 ### Added
 
+- **Role-based subagents and `/build` command.** The harness now ships
+  four role subagents under `.agents/subagents/` — `product-owner`,
+  `architect`, `developer`, `reviewer` — paired 1:1 with the slash
+  commands. New `/build` command for the implementation phase
+  (Developer role). Existing `/spec`, `/plan`, `/verify` commands now
+  delegate to their role subagent. Each role has a tight tool
+  allowlist (PO/Architect write only to `specs/`, Developer gets full
+  edit + bash, Reviewer is read-only). Pattern follows MetaGPT, BMAD
+  Method, GitHub Spec Kit, and CrewAI conventions. See
+  [`docs/decisions/0003-role-based-subagents-and-build-command.md`](docs/decisions/0003-role-based-subagents-and-build-command.md).
 - New question **`commit_convention`** (`conventional` | `freeform`,
   default `conventional`) — surfaces Conventional Commits 1.0.0
   guidance in `docs/style.md` and a pointer in `AGENTS.md`.
