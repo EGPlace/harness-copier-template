@@ -11,7 +11,7 @@
 - **Subagents** are under `.claude/agents/` (symlink to `.agents/subagents/`).
   Be explicit: "use the explorer subagent to find where X is wired up".
 - **Slash commands** are under `.claude/commands/` (symlink to `.agents/commands/`):
-  `/spec`, `/plan`, `/verify`.
+  `/spec`, `/plan`, `/verify`{% if copilot_review_loop %}, `/babysit-copilot-review`{% endif %}.
 - **Hooks** in `.claude/settings.json` enforce: auto-format on Write/Edit,
   block destructive bash, run `{{ cmd('verify') }}` on Stop. They are deterministic
   and run outside your reasoning chain — don't try to work around them.
