@@ -542,7 +542,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--pr", required=True,
                    help="PR number, or 'auto' to resolve from current branch")
     p.add_argument("--max-iterations", type=int, default=5,
-                   help="Soft cap consumed by the slash-command driver (default 5)")
+                   help="Hard cap on iterations; the driver exits 6 if "
+                        "--iteration exceeds this value (default 5)")
     p.add_argument("--max-wait-s", type=int, default=1200,
                    help="Per-iteration hard cap for review arrival (default 1200)")
     p.add_argument("--event-timeout-s", type=int, default=360,
@@ -559,6 +560,16 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.emit_state and not args.next_iteration:
         p.error("one of --emit-state or --next-iteration is required")
+
+    if args.iteration > args.max_iterations:
+        # Hard cap. Exits with a distinct code so the slash command's
+        # stop-condition list can map to it without ambiguity.
+        print(f"error: iteration cap reached "
+              f"(--iteration {args.iteration} > --max-iterations "
+              f"{args.max_iterations}); stopping. The PR may still have "
+              f"unresolved review comments — escalate or raise the cap.",
+              file=sys.stderr)
+        sys.exit(6)
 
     if not args.dry_run:
         _ensure_gh()

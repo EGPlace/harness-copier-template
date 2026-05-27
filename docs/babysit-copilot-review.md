@@ -56,9 +56,11 @@ under the equivalent App scope names (`pull_requests:write`,
 - Each Copilot review consumes **1 premium request** from the seat
   owner. As of June 1 2026, Copilot moved to usage-based billing via
   AI Credits; an unchecked loop can run up the bill quickly.
-- The `--max-iterations 5` default in `babysit_copilot_review.py`
-  exists for exactly this reason. Lower it for cost-sensitive repos;
-  raise it only if you've measured the cost.
+- The `--max-iterations 5` default in `babysit_copilot_review.py` is
+  the hard stop for exactly this reason: the driver exits 6 the moment
+  the slash command passes `--iteration N` with `N > max-iterations`,
+  refusing to re-trigger Copilot further. Lower it for cost-sensitive
+  repos; raise it only if you've measured the cost.
 - Each iteration also runs the project's verify gate at least once
   locally (CI cost is the project's own to budget).
 
@@ -109,6 +111,7 @@ The Python driver uses distinct exit codes the slash command consumes:
 | 3    | `--pr auto` could not find an open PR for the current branch.      |
 | 4    | No Copilot review within the `--max-wait-s` cap (default 20 min).  |
 | 5    | Infinite-loop guard: same comment body seen on two SHAs.           |
+| 6    | Iteration cap: `--iteration` exceeded `--max-iterations` (default 5). |
 
 Common situations and where to look:
 
@@ -127,6 +130,11 @@ Common situations and where to look:
   by formatter/linter passes between iterations. Inspect the
   comment under `~/.cache/babysit-copilot-review/seen-comments-<pr>.json`
   and decide manually.
+- **Exit 6 (iteration cap).** The loop reached `--max-iterations`
+  without arriving at a clean review. Inspect the PR — there is
+  probably a comment the loop couldn't resolve in scope. Either fix
+  it manually, escalate to the human reviewer, or re-run with a
+  higher `--max-iterations` after assessing the cost.
 - **Stale cached bot id.** Delete
   `~/.cache/babysit-copilot-review/bot-ids.json` and let the driver
   rediscover.

@@ -100,7 +100,8 @@ Stop on **any** of these:
 1. `new_inline_comments` is empty on the current HEAD (clean review).
 2. Every comment was Dismiss-and-resolve and no Escalate (also clean).
 3. Any Escalate present.
-4. Iteration cap reached (`iteration == 5`).
+4. The driver script exited 6 (iteration cap reached — `--iteration`
+   exceeded `--max-iterations`, default 5).
 5. The driver script exited 5 (infinite-loop guard tripped — the same
    comment body recurred across two SHAs in this session).
 6. The driver script exited 4 (no Copilot review within wait cap).
