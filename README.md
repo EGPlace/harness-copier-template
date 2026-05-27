@@ -5,7 +5,7 @@ A [Copier](https://copier.readthedocs.io/) template that scaffolds an
 respected sources as of mid-2026. The harness is an `AGENTS.md`-rooted
 repository layout with a thin Claude Code + OpenCode overlay enabled by
 default, and everything else (Cursor, GitHub Copilot, MCP, example
-ADR/skill/subagent, Claude hooks) opt-in.
+ADR/skill, Claude hooks) opt-in.
 
 The harness ships a four-phase, role-based workflow — **Product Owner**
 (`/spec`) → **Architect** (`/plan`) → **Developer** (`/build`) →

@@ -31,8 +31,12 @@ Produce `plan.md` and mirror it into a checkbox `tasks.md` in the same
   abstractions. No features the spec does not require.
 - Reuse existing code and patterns where possible — use Grep/Glob to
   find them before proposing new modules.
-- Never edit code. Only `plan.md`, `tasks.md`, and (if asked) new ADR
-  stubs under `docs/adr/`.
+- Never edit code. Write only `plan.md` and `tasks.md` under
+  `specs/<YYYY-MM>-<slug>/`. If the design needs an ADR, surface it
+  in `plan.md`'s **Architecture decisions** block (with a one-line
+  rationale and an "ADR needed: <topic>" marker); the human or the
+  Developer authors the ADR file under `docs/adr/` as a separate
+  step. Do not create files outside the spec directory.
 
 ## Output format
 
@@ -42,7 +46,9 @@ Produce `plan.md` and mirror it into a checkbox `tasks.md` in the same
 # Plan
 
 ## Architecture decisions
-- <Decision 1>: <chosen option> — <one-line rationale>. ADR: <link or "n/a">.
+- <Decision 1>: <chosen option> — <one-line rationale>.
+  ADR: <link to an existing ADR, "ADR needed: <topic>" if a new one is
+  required before code lands, or "n/a">.
 
 ## Phase 1 — <name>
 **Scope.** <One paragraph.>

@@ -128,10 +128,11 @@ their next `copier update`.
 
 **Negative.**
 
-- The default harness now ships four extra files under
-  `.agents/subagents/`. The total subagent count goes from one
-  (optional `explorer`) to five (four role + one optional explorer).
-  This is the trade-off for making the role boundaries explicit.
+- The default harness now ships five files under
+  `.agents/subagents/` (four role agents + the always-present
+  `explorer`), up from one optional `explorer` previously. This is
+  the trade-off for making the role boundaries explicit and removing
+  the gating hazard.
 - `copier update` on previously-generated repos will prompt for
   overwrites on `AGENTS.md`, `CLAUDE.md`, and the three existing
   command files. The `_skip_if_exists` list does not protect these
