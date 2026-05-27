@@ -21,8 +21,10 @@ implementation.
 
 ## Goal
 
-Produce `specs/<YYYY-MM>-<slug>/spec.md` (and seed `plan.md`, `tasks.md`,
-`scratch.md` as empty stubs) so the Architect can plan against it.
+Produce `specs/<YYYY-MM>-<slug>/spec.md` so the Architect can plan
+against it. Do not create `plan.md`, `tasks.md`, or `scratch.md` —
+those are owned by the Architect and Developer roles respectively
+and they will write them from scratch.
 
 ## Constraints
 
@@ -65,9 +67,6 @@ Produce `specs/<YYYY-MM>-<slug>/spec.md` (and seed `plan.md`, `tasks.md`,
 ## Open questions
 - <Anything blocking the Architect, if any>
 ```
-
-`plan.md`, `tasks.md`, and `scratch.md` are created as empty stubs the
-Architect and Developer will fill in.
 
 ## Handoff
 

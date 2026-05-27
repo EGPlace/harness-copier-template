@@ -127,6 +127,14 @@ their next `copier update`.
   (`.agents/subagents/<role>.md`), not duplicated across command
   files and `AGENTS.md`. Future changes to a role's rules are a
   one-file edit.
+- File ownership per role is aligned with OpenCode's `write` vs.
+  `edit` permission split: each artifact is created (via `write`,
+  which both PO and Architect have) by the role that owns it — PO
+  writes `spec.md`, Architect writes `plan.md` and `tasks.md`,
+  Developer writes `scratch.md`. `/spec` only creates the spec
+  directory; pre-creating empty stubs would force later roles to
+  `edit` files they should be able to `write` from scratch under
+  OpenCode's permission model.
 - The build phase now has the same shape as the other three phases:
   a slash command, a role agent, an explicit handoff. The implicit
   "just do the work" gap is closed.
