@@ -10,8 +10,8 @@
 # Token permissions required (the same ones the slash command's docs
 # call out under "Auth & permissions"):
 #   - Pull requests: read/write
-#   - Contents:      read/write   <-- needed by resolveReviewThread,
-#                                    cite GitHub Community discussion #44650
+#   - Contents:      read/write   <-- needed by resolveReviewThread;
+#                                    see GitHub Community discussion #44650
 #
 # Exits 0 on success, non-zero with gh's stderr on failure.
 

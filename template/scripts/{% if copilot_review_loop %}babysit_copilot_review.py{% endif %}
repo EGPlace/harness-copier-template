@@ -138,16 +138,40 @@ def _fetch_pr_state(pr: int) -> dict[str, Any]:
     return _gh_json(["pr", "view", str(pr), "--json", PR_VIEW_FIELDS])
 
 
+def _gh_json_paginated_array(args: list[str]) -> list[Any]:
+    """Run `gh api ... --paginate --slurp` and flatten the result.
+
+    Plain `--paginate` concatenates per-page JSON documents without a
+    delimiter, so `json.loads` fails the moment the endpoint paginates
+    (e.g. >30 reviews or >30 inline comments). `--slurp` wraps the
+    pages as a JSON array of arrays; this helper flattens that into a
+    single list of items."""
+    res = _run(["gh", "api", *args, "--paginate", "--slurp"], check=False)
+    if res.returncode != 0:
+        raise GhError(f"gh api {' '.join(args)} failed: {res.stderr.strip()}")
+    out = res.stdout.strip()
+    if not out:
+        return []
+    pages = json.loads(out)
+    if not isinstance(pages, list):
+        return []
+    flat: list[Any] = []
+    for page in pages:
+        if isinstance(page, list):
+            flat.extend(page)
+        elif page is not None:
+            flat.append(page)
+    return flat
+
+
 def _fetch_reviews(owner: str, repo: str, pr: int) -> list[dict[str, Any]]:
     """Fetch reviews via REST so `id` is a numeric DB id and `commit_id`
     is present on each review. `gh pr view --json reviews` would return
     GraphQL node ids (strings like ``PRR_xxx``) which can't be ordered
     numerically and need a separate `commit` lookup per review."""
-    out = _gh_json([
-        "api", f"repos/{owner}/{repo}/pulls/{pr}/reviews",
-        "--paginate",
+    return _gh_json_paginated_array([
+        f"repos/{owner}/{repo}/pulls/{pr}/reviews",
     ])
-    return out or []
 
 
 def _latest_copilot_review(reviews: list[dict[str, Any]], head_sha: str,
@@ -176,11 +200,9 @@ def _latest_copilot_review(reviews: list[dict[str, Any]], head_sha: str,
 def _fetch_review_comments(owner: str, repo: str, pr: int) -> list[dict[str, Any]]:
     """Fetch raw review comments via REST so we get `commit_id` (which
     `gh pr view --json reviews` does not expose per-comment)."""
-    out = _gh_json([
-        "api", f"repos/{owner}/{repo}/pulls/{pr}/comments",
-        "--paginate",
+    return _gh_json_paginated_array([
+        f"repos/{owner}/{repo}/pulls/{pr}/comments",
     ])
-    return out or []
 
 
 def _new_inline_comments(all_comments: list[dict[str, Any]],
@@ -212,6 +234,11 @@ def _new_inline_comments(all_comments: list[dict[str, Any]],
 
 
 def _open_threads(state: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return one entry per unresolved thread. Each entry includes the
+    GraphQL node id of the thread's first comment, so the agent can
+    match a `new_inline_comments[]` entry (via its `node_id` field) to
+    the right thread when multiple unresolved threads share a path+line.
+    """
     threads = state.get("reviewThreads") or []
     out = []
     for t in threads:
@@ -220,6 +247,7 @@ def _open_threads(state: dict[str, Any]) -> list[dict[str, Any]]:
         first = (t.get("comments") or [{}])[0]
         out.append({
             "id": t.get("id"),
+            "first_comment_node_id": first.get("id"),
             "path": first.get("path"),
             "line": first.get("line"),
             "is_resolved": bool(t.get("isResolved")),

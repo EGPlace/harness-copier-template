@@ -8,8 +8,10 @@ waits for it to arrive, triages each new inline comment (fix /
 dismiss-and-resolve / escalate), runs the project's verify gate, pushes
 the fix, and re-triggers Copilot for another pass — stopping on a
 clean review, an escalation, or an iteration cap. **The loop never
-merges.** See [`.agents/commands/babysit-copilot-review.md`](../.agents/commands/babysit-copilot-review.md)
-for the command body the agent follows.
+merges.** The command body the agent follows lives in this template
+under `template/.agents/commands/` (gated on the `copilot_review_loop`
+flag in the path) and renders to `.agents/commands/babysit-copilot-review.md`
+in generated projects.
 
 ## Prerequisites
 

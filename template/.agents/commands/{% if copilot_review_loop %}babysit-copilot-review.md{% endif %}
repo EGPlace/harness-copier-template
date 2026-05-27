@@ -49,7 +49,10 @@ For each entry in `new_inline_comments`, triage into exactly one of:
   `$PR` come from the top-level snapshot; `$COMMENT_ID` is the `id`
   field of the matching `new_inline_comments` entry; `$THREAD_ID` is
   the `id` field of the matching `open_threads` entry (the `PRRT_...`
-  GraphQL node id, not the inline comment id):
+  GraphQL node id, not the inline comment id). Match the thread to
+  the inline comment by `new_inline_comments[].node_id ==
+  open_threads[].first_comment_node_id` rather than by `path+line` —
+  multiple unresolved threads can share a line:
   ```sh
   gh api -X POST "/repos/$OWNER/$REPO/pulls/$PR/comments/$COMMENT_ID/replies" \
     -f body="Dismissed: <one-sentence reason>."
