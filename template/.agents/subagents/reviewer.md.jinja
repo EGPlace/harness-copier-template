@@ -1,4 +1,5 @@
 {%- from '_macros.jinja' import cmd with context -%}
+{%- set runner_cmds = [cmd('verify'), cmd('test'), cmd('lint')] | unique | list -%}
 ---
 name: reviewer
 description: |
@@ -12,9 +13,9 @@ permission:
   write: deny
   edit: deny
   bash:
-    {{ (cmd('verify') ~ '*') | tojson }}: allow
-    {{ (cmd('test') ~ '*') | tojson }}: allow
-    {{ (cmd('lint') ~ '*') | tojson }}: allow
+{%- for c in runner_cmds %}
+    {{ (c ~ '*') | tojson }}: allow
+{%- endfor %}
     "rg *": allow
     "grep *": allow
     "ls *": allow

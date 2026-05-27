@@ -11,6 +11,17 @@ name, default, or output path bumps the major version).
 _Target version: 0.3.0. Not yet tagged — further PRs may land here
 before the release._
 
+> **Maintainer note:** the Unreleased section already contains two
+> entries under `### Removed (breaking)` (the `package_manager`
+> choice narrowing and the `include_example_subagent` question
+> removal). Per the SemVer policy stated above ("a breaking change
+> to a question name, default, or output path bumps the major
+> version"), removing a question name technically warrants a
+> major-version bump (i.e. `1.0.0`) rather than the current
+> `0.3.0` target. Decide before tagging whether to retarget this
+> release or update the policy to reflect pre-1.0 minor-bump
+> conventions.
+
 
 ### Added
 
