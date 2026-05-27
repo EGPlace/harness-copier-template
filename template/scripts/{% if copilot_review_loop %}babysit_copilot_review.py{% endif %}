@@ -125,39 +125,51 @@ def _resolve_owner_repo() -> tuple[str, str]:
 # Review state queries
 # ---------------------------------------------------------------------------
 
-PR_VIEW_FIELDS = "reviews,reviewThreads,headRefOid,updatedAt,statusCheckRollup,headRepository,headRepositoryOwner,isCrossRepository"
+PR_VIEW_FIELDS = "reviewThreads,headRefOid,updatedAt,statusCheckRollup,headRepository,headRepositoryOwner,isCrossRepository"
 
 
 def _fetch_pr_state(pr: int) -> dict[str, Any]:
     return _gh_json(["pr", "view", str(pr), "--json", PR_VIEW_FIELDS])
 
 
+def _fetch_reviews(owner: str, repo: str, pr: int) -> list[dict[str, Any]]:
+    """Fetch reviews via REST so `id` is a numeric DB id and `commit_id`
+    is present on each review. `gh pr view --json reviews` would return
+    GraphQL node ids (strings like ``PRR_xxx``) which can't be ordered
+    numerically and need a separate `commit` lookup per review."""
+    out = _gh_json([
+        "api", f"repos/{owner}/{repo}/pulls/{pr}/reviews",
+        "--paginate",
+    ])
+    return out or []
+
+
 def _latest_copilot_review(reviews: list[dict[str, Any]], head_sha: str,
                            last_review_id: int) -> dict[str, Any] | None:
     """Return the newest Copilot review on `head_sha` strictly newer than
-    `last_review_id`, or None."""
+    `last_review_id`, or None. Expects REST-shaped review dicts (numeric
+    ``id``, ``commit_id`` SHA, ``user.login``)."""
     best: dict[str, Any] | None = None
     for r in reviews or []:
-        user = (r.get("author") or r.get("user") or {})
+        user = r.get("user") or {}
         login = (user.get("login") or "").lower()
         if not login.startswith(COPILOT_LOGIN_PREFIX):
             continue
-        commit_id = r.get("commit_id") or r.get("commitId") or ""
-        if commit_id != head_sha:
+        if r.get("commit_id") != head_sha:
             continue
-        rid = int(r.get("id") or r.get("databaseId") or 0)
-        if rid <= last_review_id:
+        rid_raw = r.get("id")
+        if not isinstance(rid_raw, int):
             continue
-        if best is None or rid > int(best.get("id") or best.get("databaseId") or 0):
-            r["_normalized_id"] = rid
+        if rid_raw <= last_review_id:
+            continue
+        if best is None or rid_raw > int(best.get("id") or 0):
             best = r
     return best
 
 
-def _fetch_review_comments(pr: int) -> list[dict[str, Any]]:
+def _fetch_review_comments(owner: str, repo: str, pr: int) -> list[dict[str, Any]]:
     """Fetch raw review comments via REST so we get `commit_id` (which
     `gh pr view --json reviews` does not expose per-comment)."""
-    owner, repo = _resolve_owner_repo()
     out = _gh_json([
         "api", f"repos/{owner}/{repo}/pulls/{pr}/comments",
         "--paginate",
@@ -305,9 +317,11 @@ def _rerequest_via_graphql(owner: str, repo: str, pr: int, *,
               "`gh pr edit --add-reviewer @copilot`", file=sys.stderr)
         _request_initial_review(pr, dry_run=dry_run)
         return False
-    # Look up the PR node ID via GraphQL — we need it for requestReviews.
-    pr_node = _gh_json(["pr", "view", str(pr), "--json", "id", "-q", ".id"])
-    pr_node_id = pr_node if isinstance(pr_node, str) else None
+    # Look up the PR node ID — we need it for requestReviews. `gh ... -q`
+    # would print raw text and break `_gh_json`'s `json.loads`, so we
+    # fetch the JSON object and pluck `id` out in Python.
+    pr_node = _gh_json(["pr", "view", str(pr), "--json", "id"])
+    pr_node_id = (pr_node or {}).get("id") if isinstance(pr_node, dict) else None
     if not pr_node_id:
         print("warn: could not resolve PR node id", file=sys.stderr)
         return False
@@ -339,7 +353,8 @@ def _rerequest_via_graphql(owner: str, repo: str, pr: int, *,
 # Wait loop
 # ---------------------------------------------------------------------------
 
-def _wait_for_review(pr: int, head_sha: str, last_review_id: int, *,
+def _wait_for_review(owner: str, repo: str, pr: int, head_sha: str,
+                     last_review_id: int, *,
                      max_wait_s: int, event_timeout_s: int,
                      dry_run: bool) -> dict[str, Any]:
     """Poll until a fresh Copilot review for `head_sha` arrives, or raise."""
@@ -347,7 +362,8 @@ def _wait_for_review(pr: int, head_sha: str, last_review_id: int, *,
         print(f"[dry-run] would wait up to {max_wait_s}s for Copilot review "
               f"on {head_sha[:8]} newer than id={last_review_id}",
               file=sys.stderr)
-        return {"_normalized_id": last_review_id + 1, "commit_id": head_sha}
+        return {"id": last_review_id + 1, "commit_id": head_sha,
+                "user": {"login": "copilot-pull-request-reviewer[bot]"}}
     start = time.monotonic()
     backoff = 60
     phase = "passive"
@@ -368,8 +384,8 @@ def _wait_for_review(pr: int, head_sha: str, last_review_id: int, *,
                   f"({head_sha[:8]} -> {new_head[:8]}); resetting",
                   file=sys.stderr)
             head_sha = new_head
-        review = _latest_copilot_review(state.get("reviews") or [],
-                                        head_sha, last_review_id)
+        reviews = _fetch_reviews(owner, repo, pr)
+        review = _latest_copilot_review(reviews, head_sha, last_review_id)
         if review:
             return review
         sleep_s = 30 if phase == "passive" else backoff
@@ -434,14 +450,18 @@ def _check_infinite_loop(pr: int, comments: list[dict[str, Any]],
 # ---------------------------------------------------------------------------
 
 def _emit_state(pr: int, owner: str, repo: str, state: dict[str, Any],
-                review: dict[str, Any], iteration: int) -> None:
+                review: dict[str, Any], iteration: int,
+                prev_review_id: int) -> None:
     head_sha = state.get("headRefOid") or ""
-    last_review_id = int(review.get("_normalized_id")
-                         or review.get("id") or 0)
-    comments = _fetch_review_comments(pr)
+    last_review_id = int(review.get("id") or 0)
+    comments = _fetch_review_comments(owner, repo, pr)
+    # Filter to comments belonging to a review strictly newer than the
+    # one the caller had already processed (`prev_review_id`). This is
+    # the value the caller passed in via BABYSIT_LAST_REVIEW_ID; the
+    # snapshot's own `last_copilot_review_id` (the just-arrived review)
+    # is what the caller should pass back in on the next iteration.
     new_comments = _new_inline_comments(
-        comments, head_sha,
-        last_review_id=int(os.environ.get("BABYSIT_PREV_REVIEW_ID", "0")),
+        comments, head_sha, last_review_id=prev_review_id,
     )
     _check_infinite_loop(pr, new_comments, head_sha)
     snapshot = {
@@ -506,7 +526,7 @@ def main(argv: list[str] | None = None) -> int:
         _rerequest_via_graphql(owner, repo, pr, dry_run=args.dry_run)
 
     review = _wait_for_review(
-        pr, head_sha, last_review_id,
+        owner, repo, pr, head_sha, last_review_id,
         max_wait_s=args.max_wait_s,
         event_timeout_s=args.event_timeout_s,
         dry_run=args.dry_run,
@@ -515,7 +535,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         snapshot = {
             "pr": pr, "head_sha": head_sha, "owner": owner, "repo": repo,
-            "last_copilot_review_id": int(review.get("_normalized_id", 0)),
+            "last_copilot_review_id": int(review.get("id") or 0),
             "open_threads": [], "new_inline_comments": [],
             "iteration": args.iteration, "dry_run": True,
         }
@@ -523,7 +543,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     state = _fetch_pr_state(pr)
-    _emit_state(pr, owner, repo, state, review, args.iteration)
+    _emit_state(pr, owner, repo, state, review, args.iteration,
+                prev_review_id=last_review_id)
     return 0
 
 

@@ -45,7 +45,11 @@ For each entry in `new_inline_comments`, triage into exactly one of:
   PR (style nit the project doesn't enforce, suggestion to refactor an
   untouched file, request for a test that already exists elsewhere).
   Before resolving, **reply on the thread with a one-sentence
-  justification** so the resolution is auditable:
+  justification** so the resolution is auditable. `$OWNER`, `$REPO`,
+  `$PR` come from the top-level snapshot; `$COMMENT_ID` is the `id`
+  field of the matching `new_inline_comments` entry; `$THREAD_ID` is
+  the `id` field of the matching `open_threads` entry (the `PRRT_...`
+  GraphQL node id, not the inline comment id):
   ```sh
   gh api -X POST "/repos/$OWNER/$REPO/pulls/$PR/comments/$COMMENT_ID/replies" \
     -f body="Dismissed: <one-sentence reason>."

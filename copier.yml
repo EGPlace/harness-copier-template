@@ -394,13 +394,14 @@ _message_after_copy: |
   config files manually.
   {%- endif %}
   {% if copilot_review_loop -%}
-  Note: copilot_review_loop=true generated `/babysit-copilot-review` and
-  the supporting scripts under `scripts/`. Before using the command, read
-  `docs/babysit-copilot-review.md` for the required GitHub App / fine-
-  grained PAT permissions (`Pull requests: read/write`, `Contents:
-  read/write` — Contents write is required by the GraphQL
-  `resolveReviewThread` mutation) and the recommended "Review new pushes"
-  ruleset on your default branch, which is the cleanest re-trigger
-  mechanism (the bundled GraphQL `requestReviews(botIds)` workaround is
-  the fallback when the ruleset is not configured).
+  Note: copilot_review_loop=true generated `/babysit-copilot-review`
+  and the supporting scripts under `scripts/`. Before using the
+  command, read `docs/babysit-copilot-review.md` for the required
+  GitHub App / fine-grained PAT permissions
+  (`Pull requests: read/write`, `Contents: read/write` — Contents
+  write is required by the GraphQL `resolveReviewThread` mutation)
+  and the recommended "Review new pushes" ruleset on your default
+  branch, which is the cleanest re-trigger mechanism (the bundled
+  GraphQL `requestReviews(botIds)` workaround is the fallback when
+  the ruleset is not configured).
   {%- endif %}

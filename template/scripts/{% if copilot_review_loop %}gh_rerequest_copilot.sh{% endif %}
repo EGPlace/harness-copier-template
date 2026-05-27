@@ -54,7 +54,7 @@ if [ -z "$BOT_ID" ]; then
   exit 1
 fi
 
-PR_NODE_ID=$(gh pr view "$PR" --json id --jq .id)
+PR_NODE_ID=$(gh pr view "$PR" --repo "$OWNER/$REPO" --json id --jq .id)
 if [ -z "$PR_NODE_ID" ]; then
   echo "error: could not resolve PR node id for $OWNER/$REPO#$PR" >&2
   exit 1
