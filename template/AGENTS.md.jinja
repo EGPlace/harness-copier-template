@@ -68,7 +68,8 @@ For Claude Code users:
 - Commit messages: **Conventional Commits 1.0.0**
 {%- if pr_merge_strategy == 'squash' %} — apply the format to the **PR title** (squash-merge){% endif %}
 {%- if pr_merge_strategy == 'merge' %} — apply the format to every branch commit *and* the merge commit{% endif %}
-{%- if pr_merge_strategy == 'rebase' %} — apply the format to every branch commit (rebase-merge){% endif %}.
+{%- if pr_merge_strategy == 'rebase' %} — apply the format to every branch commit (rebase-merge){% endif %}
+{%- if pr_merge_strategy not in ('squash', 'merge', 'rebase') %} — where it applies depends on the repo's merge strategy (squash → PR title; merge or rebase → every branch commit){% endif %}.
   See [`docs/style.md`](docs/style.md#commit-messages) for the format,
   type list, breaking-change syntax, examples, and full merge-strategy
   guidance.

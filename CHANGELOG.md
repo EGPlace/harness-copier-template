@@ -56,7 +56,7 @@ before the release._
   (e.g. "apply the format to the **PR title** (squash-merge)") and
   defers the full format, type list, breaking-change syntax,
   examples, and merge-strategy detail to
-  [`docs/style.md#commit-messages`](docs/style.md). Keeps AGENTS.md
+  [`docs/style.md#commit-messages`](docs/style.md#commit-messages). Keeps AGENTS.md
   short (it's the always-loaded agent instruction surface) and puts
   the detail in the document people open when they actually need it.
 - The `AGENTS.md` `## Stack` section's tool-versions and
