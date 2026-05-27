@@ -18,7 +18,11 @@ You are carrying out the implementation phase of a feature.
    read. (The Developer is itself a subagent and cannot spawn the
    `explorer` subagent on its own.)
 4. Delegate the work to the **developer** subagent
-   (`.agents/subagents/developer.md`). It will:
+   (`.agents/subagents/developer.md`). In the delegation prompt,
+   tell it to read `scratch.md` first if you populated it in
+   step 3 — that is where the explorer summary lives, and the
+   Developer's required-reading rule already covers it when present.
+   The developer will then:
    - Work one phase at a time, writing tests first where the plan
      calls for behaviour change.
    - Tick `tasks.md` checkboxes in the same commit as the code change.

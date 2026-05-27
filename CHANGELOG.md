@@ -53,19 +53,16 @@ before the release._
 - `AGENTS.md` `## Stack` section gets a "New-machine setup" pointer to
   the new doc.
 
-### Changed (breaking)
+### Removed (breaking)
 
-- `explorer` subagent is now always generated. The
-  `include_example_subagent` Copier question is **removed**; the
-  Developer role's working loop relies on `explorer` being present.
+- `include_example_subagent` Copier question. The `explorer` subagent
+  it used to gate is now always generated, because the Developer
+  role's working loop relies on `explorer` being present.
   Brownfield repos that previously generated with
   `include_example_subagent: false` will get `.agents/subagents/explorer.md`
   added on their next `copier update`. Saved answers files still
   containing `include_example_subagent: …` can keep the key (Copier
   ignores unknown answers) or remove it by hand.
-
-### Removed (breaking)
-
 - `package_manager` choices narrowed from 21 options to a curated set:
   `uv` (Python), `pixi` (conda-ecosystem), `cmake` (C/C++), and
   `other`. Removed: `pip`, `poetry`, `pdm`, `hatch`, `conda`, `pnpm`,

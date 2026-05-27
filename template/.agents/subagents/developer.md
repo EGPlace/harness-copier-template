@@ -27,7 +27,9 @@ phase boundary.
 ## Constraints
 
 - Read `spec.md`, `plan.md`, and `tasks.md` in full before touching
-  code. If the plan diverges from the spec or a step is ambiguous,
+  code. If `scratch.md` exists, read it too — the main agent may
+  have left an `explorer` summary or a prior phase's hand-back note
+  there. If the plan diverges from the spec or a step is ambiguous,
   stop and ask.
 - Work **one phase at a time**. Do not begin phase N+1 until phase N's
   tests pass and its `tasks.md` boxes are ticked.
