@@ -55,6 +55,12 @@ branch commits during work can be freeform working notes.
 PRs land as a **merge commit plus every branch commit verbatim**, so
 each branch commit you push must follow the convention. Rebase or
 amend locally to clean up WIP commits before pushing.
+
+The merge commit message must also follow the convention. GitHub's
+default (`Merge pull request #N from <branch>`) is not Conventional,
+so configure the repo to use the PR title for merge commits
+(_Settings → Pull Requests → "Default commit message" → "Pull request
+title"_), or write the merge message by hand at merge time.
 {%- elif pr_merge_strategy == 'rebase' -%}
 PRs are **rebase-merged**, so every branch commit lands verbatim and
 each one must follow the convention. Rebase or amend locally to clean

@@ -290,7 +290,12 @@ pr_merge_strategy:
                  only commit that lands. Branch commits during work
                  are freeform working notes.
       - merge:   a merge commit + every branch commit lands verbatim.
-                 Each branch commit must follow the convention.
+                 Each branch commit must follow the convention, AND the
+                 merge commit's message must too — GitHub's default
+                 ("Merge pull request #N from …") is not Conventional,
+                 so configure the merge to use the PR title (Settings
+                 → Pull Requests → "Default commit message" → "Pull
+                 request title") or write the merge message by hand.
       - rebase:  every branch commit lands verbatim, no merge commit.
                  Each branch commit must follow the convention.
       - unknown: don't tailor guidance; show all three modes.
