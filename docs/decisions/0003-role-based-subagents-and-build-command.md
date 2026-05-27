@@ -148,9 +148,14 @@ their next `copier update`.
   understands and ignores the other (Claude Code does not parse
   `permission:`; OpenCode treats `tools:` as deprecated and uses
   `permission:` — see `docs/harness-engineering-2026-05.md:175-194`).
-  This keeps a single subagent file working in both tools via the
-  existing symlink layout, while ensuring the Reviewer's `Write`/
-  `Edit` denial is enforced on both surfaces — not just Claude Code.
+  Every subagent also declares `mode: subagent` (OpenCode-only;
+  Claude Code ignores it). Without that key OpenCode defaults to
+  `mode: all`, which would expose the role as a top-level primary
+  agent in addition to a delegated one — the explicit `mode:
+  subagent` keeps each role as a delegation-only helper. This keeps
+  a single subagent file working in both tools via the existing
+  symlink layout, while ensuring the Reviewer's `Write`/`Edit`
+  denial is enforced on both surfaces — not just Claude Code.
 
 **Negative.**
 

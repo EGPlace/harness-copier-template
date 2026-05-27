@@ -25,6 +25,7 @@ permission:
     "git blame*": allow
     "git show*": allow
     "*": deny
+mode: subagent
 model: inherit
 ---
 

@@ -11,6 +11,7 @@ permission:
   write: allow
   edit: allow
   bash: allow
+mode: subagent
 model: inherit
 ---
 
