@@ -261,12 +261,13 @@ license:
 commit_convention:
   type: str
   help: |
-    Commit-message convention surfaced to agents and humans. Drives
-    the commit-message bullet in `AGENTS.md` (always updated on
-    `copier update` — the primary agent-facing surface) and the
-    matching section in `docs/style.md` (greenfield-only;
-    `_skip_if_exists` preserves an existing style guide on brownfield
-    updates).
+    Commit-message convention surfaced to agents and humans. The full
+    format, type list, examples, and merge-strategy detail live in
+    `docs/style.md#commit-messages`; `AGENTS.md` carries only a short
+    one-line orientation that links there. `docs/style.md` is
+    `_skip_if_exists`, so on brownfield `copier update` an existing
+    style guide is preserved — merge the template section by hand if
+    you want the AGENTS.md link to resolve to one.
       - conventional: Conventional Commits 1.0.0
                       (https://www.conventionalcommits.org/en/v1.0.0/).
                       Required if your release tooling parses commit

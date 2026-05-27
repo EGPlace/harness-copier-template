@@ -51,19 +51,19 @@ before the release._
 
 ### Changed
 
-- The single commit-message rule in `AGENTS.md` is rewritten into a
-  self-contained summary that varies by `commit_convention` and
-  `pr_merge_strategy` (Conventional Commits format, common type list,
-  breaking-change syntax, and merge-strategy-specific note about where
-  the convention applies). It no longer relies on `docs/style.md`
-  being up-to-date.
-- `AGENTS.md` `## Stack` reworks the "Tool versions" bullet to spell
-  out the pin-file trade-off — `.tool-versions` (read by both `asdf`
-  and `mise`, recommended for cross-tool compatibility) vs.
-  `mise.toml` (read only by `mise`, richer config) — instead of
-  calling them a "single source of truth". Mirrored in
-  `docs/tool-bootstrap.md`. The template does not generate either pin
-  file; pick one as part of project setup.
+- The `AGENTS.md` commit-message bullet is now a one-line orientation
+  that names the convention plus a merge-strategy-specific clause
+  (e.g. "apply the format to the **PR title** (squash-merge)") and
+  defers the full format, type list, breaking-change syntax,
+  examples, and merge-strategy detail to
+  [`docs/style.md#commit-messages`](docs/style.md). Keeps AGENTS.md
+  short (it's the always-loaded agent instruction surface) and puts
+  the detail in the document people open when they actually need it.
+- The `AGENTS.md` `## Stack` section's tool-versions and
+  new-machine-setup bullets collapse to a single referrer pointing at
+  [`docs/tool-bootstrap.md`](docs/tool-bootstrap.md); the pin-file
+  trade-off (`.tool-versions` vs. `mise.toml`) lives only in
+  `docs/tool-bootstrap.md` now.
 - Default behaviour: new projects render with Conventional Commits +
   squash-merge guidance.
 
@@ -71,15 +71,16 @@ before the release._
 
 - `AGENTS.md` is *not* in `_skip_if_exists`, so existing projects
   running `copier update` will see a diff on it (accept it to pick
-  up the new commit-message wording, or answer
-  `commit_convention=freeform` to keep something close to the
-  previous short-form rule).
-- `docs/style.md` *is* in `_skip_if_exists`. For greenfield repos,
-  it is generated with a new `## Commit messages` section that mirrors
-  the AGENTS.md guidance. For existing repos with their own
-  `docs/style.md`, it is preserved on `copier update`; the AGENTS.md
-  bullet is self-sufficient, so merging the new style.md section is
-  optional.
+  up the shorter commit-message bullet and the new
+  `docs/tool-bootstrap.md` referrer).
+- `docs/style.md` *is* in `_skip_if_exists`. For greenfield repos it
+  is generated with a `## Commit messages` section, which is what
+  `AGENTS.md` now links to. For brownfield repos whose existing
+  `docs/style.md` does not have that section, the AGENTS.md link
+  will land on the file but not on a section — merge the new
+  template `docs/style.md` (or copy the section across by hand) so
+  the link resolves. The `commit_convention` question's help text
+  also calls this out at prompt time.
 - `docs/tool-bootstrap.md` is always generated on greenfield and added
   to `_skip_if_exists` for brownfield, matching the existing
   `docs/architecture.md` / `docs/style.md` / `docs/testing.md` pattern.
