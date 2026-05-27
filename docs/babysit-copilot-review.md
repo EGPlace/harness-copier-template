@@ -73,12 +73,15 @@ from a CI runner.
 For an automated CI variant, use
 [`anthropics/claude-code-action@v1`](https://github.com/anthropics/claude-code-action)
 on the `pull_request` and `pull_request_review` events, filtering on
-`sender.login == 'copilot-pull-request-reviewer[bot]'`. **Do not use
-the `pull_request_target` event** for this — it runs with the base
-repo's secrets in the context of fork PRs, which is a known
-exfiltration vector. The bundled command refuses fork PRs for the
-same reason; if you need fork support in CI, gate the workflow on a
-maintainer-applied label and review the secrets blast-radius first.
+`startsWith(github.event.sender.login, 'copilot-pull-request-reviewer')`
+— the same prefix match the Python driver uses, so the workflow keeps
+working if GitHub renames the bot suffix (e.g. drops `[bot]`).
+**Do not use the `pull_request_target` event** for this — it runs
+with the base repo's secrets in the context of fork PRs, which is a
+known exfiltration vector. The bundled command refuses fork PRs for
+the same reason; if you need fork support in CI, gate the workflow
+on a maintainer-applied label and review the secrets blast-radius
+first.
 
 ## Known gaps
 
