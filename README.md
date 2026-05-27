@@ -18,8 +18,9 @@ your-repo/
 ├─ .gitignore                        # greenfield: full; brownfield: merged
 ├─ docs/
 │  ├─ architecture.md
-│  ├─ style.md
+│  ├─ style.md                        # greenfield: incl. commit-message convention
 │  ├─ testing.md
+│  ├─ tool-bootstrap.md               # per-package-manager install instructions
 │  └─ adr/0001-record-architecture-decisions.md   # if include_example_adr
 ├─ specs/                            # per-feature; YYYY-MM-example/ if opted in
 ├─ scripts/                          # shell entry points (if generate_scripts)
@@ -64,7 +65,7 @@ The template asks you:
 | `project_slug`            | Lowercase-dashed slug                                    |
 | `project_description`     | One sentence                                             |
 | `primary_language`        | Drives sensible defaults for commands                    |
-| `package_manager`         | Restricted to your language's options                    |
+| `package_manager`         | `uv` \| `pixi` \| `cmake` \| `other`; default picked from `primary_language` (python → `uv`, cpp → `cmake`, else → `other`) |
 | `test_command`            | Wired into the task runner's `test` target               |
 | `lint_command`            | Wired into the task runner's `lint` target               |
 | `fmt_command`             | Wired into the task runner's `fmt` target                |
@@ -72,6 +73,8 @@ The template asks you:
 | `verify_command`          | What hooks and `/verify` run; default `./scripts/verify.sh` |
 | `generate_scripts`        | Generate `scripts/` placeholders (`verify.sh`, `fmt-file.sh`); default `true` |
 | `license`                 | SPDX id                                                  |
+| `commit_convention`       | `conventional` (default) \| `freeform`; drives the commit-message bullet in `AGENTS.md` (always updated) and the matching section in `docs/style.md` (greenfield-only — `_skip_if_exists`) |
+| `pr_merge_strategy`       | `squash` (default) \| `merge` \| `rebase` \| `unknown`; tailors where the convention applies |
 | `cursor`                  | Off by default                                           |
 | `copilot`                 | Off by default                                           |
 | `mcp`                     | Off by default                                           |
@@ -170,8 +173,8 @@ tasks:
   Cleaner syntax, no tab-sensitivity. Requires `just` on PATH.
 - **`none`** — generate neither. Use this for projects whose package /
   project manager already provides task management (e.g. **pixi** tasks
-  defined in `pixi.toml`, **hatch** scripts in `pyproject.toml`, `pnpm`
-  scripts, `cargo` aliases). The harness will then surface the raw
+  defined in `pixi.toml`, or your own external runner when
+  `package_manager=other`). The harness will then surface the raw
   `test_command` / `lint_command` / `fmt_command` / `verify_command` to
   agents directly. Consider setting `verify_command` to e.g.
   `pixi run verify` to keep the Stop hook and `/verify` slash command

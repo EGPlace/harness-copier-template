@@ -6,6 +6,85 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 for the questions and generated layout (a breaking change to a question
 name, default, or output path bumps the major version).
 
+## [Unreleased]
+
+_Target version: 0.3.0. Not yet tagged — further PRs may land here
+before the release._
+
+
+### Added
+
+- New question **`commit_convention`** (`conventional` | `freeform`,
+  default `conventional`) — surfaces Conventional Commits 1.0.0
+  guidance in `docs/style.md` and a pointer in `AGENTS.md`.
+- New question **`pr_merge_strategy`** (`squash` | `merge` | `rebase` |
+  `unknown`, default `squash`) — tailors the commit-message guidance to
+  where the convention actually has to hold (PR title vs. every branch
+  commit).
+- New file **`docs/tool-bootstrap.md`** — always-generated, pre-filled
+  per `package_manager` with install snippets for the curated set
+  (`uv`, `pixi`, `cmake`) plus a generic `_Fill in:_` arm for `other`.
+  Includes an "Activate the language toolchain" section that gives
+  [`mise`](https://mise.jdx.dev/) and [`asdf`](https://asdf-vm.com/)
+  equal billing as runtime version managers, plus a verification step
+  that uses the runner-aware `cmd('verify')` macro. Added to
+  `_skip_if_exists` so brown-field repos keep their existing file.
+- `AGENTS.md` `## Stack` section gets a "New-machine setup" pointer to
+  the new doc.
+
+### Removed (breaking)
+
+- `package_manager` choices narrowed from 21 options to a curated set:
+  `uv` (Python), `pixi` (conda-ecosystem), `cmake` (C/C++), and
+  `other`. Removed: `pip`, `poetry`, `pdm`, `hatch`, `conda`, `pnpm`,
+  `npm`, `yarn`, `bun`, `cargo`, `go`, `gradle`, `maven`, `dotnet`,
+  `meson`, `bazel`, `make`. Pick `other` for anything not in the
+  curated set and fill in the install steps in
+  `docs/tool-bootstrap.md` after generation. Existing projects on
+  `copier update` that previously selected a removed value must
+  re-answer the question with one of the new choices.
+- `test_command` / `lint_command` / `fmt_command` defaults: arms for
+  the removed package managers / languages were dropped; the
+  remaining recognised combinations are `python+uv`, `python+pixi`,
+  and `cpp+cmake`. Everything else falls through to
+  `echo 'TODO: configure ..._command in copier.yml'`.
+
+### Changed
+
+- The `AGENTS.md` commit-message bullet is now a one-line orientation
+  that names the convention plus a merge-strategy-specific clause
+  (e.g. "apply the format to the **PR title** (squash-merge)") and
+  defers the full format, type list, breaking-change syntax,
+  examples, and merge-strategy detail to
+  [`docs/style.md#commit-messages`](docs/style.md#commit-messages). Keeps AGENTS.md
+  short (it's the always-loaded agent instruction surface) and puts
+  the detail in the document people open when they actually need it.
+- The `AGENTS.md` `## Stack` section's tool-versions and
+  new-machine-setup bullets collapse to a single referrer pointing at
+  [`docs/tool-bootstrap.md`](docs/tool-bootstrap.md); the pin-file
+  trade-off (`.tool-versions` vs. `mise.toml`) lives only in
+  `docs/tool-bootstrap.md` now.
+- Default behaviour: new projects render with Conventional Commits +
+  squash-merge guidance.
+
+### Upgrade notes
+
+- `AGENTS.md` is *not* in `_skip_if_exists`, so existing projects
+  running `copier update` will see a diff on it (accept it to pick
+  up the shorter commit-message bullet and the new
+  `docs/tool-bootstrap.md` referrer).
+- `docs/style.md` *is* in `_skip_if_exists`. For greenfield repos it
+  is generated with a `## Commit messages` section, which is what
+  `AGENTS.md` now links to. For brownfield repos whose existing
+  `docs/style.md` does not have that section, the AGENTS.md link
+  will land on the file but not on a section — merge the new
+  template `docs/style.md` (or copy the section across by hand) so
+  the link resolves. The `commit_convention` question's help text
+  also calls this out at prompt time.
+- `docs/tool-bootstrap.md` is always generated on greenfield and added
+  to `_skip_if_exists` for brownfield, matching the existing
+  `docs/architecture.md` / `docs/style.md` / `docs/testing.md` pattern.
+
 ## [0.2.0] – 2026-05-21
 
 ### Added
@@ -97,5 +176,6 @@ name, default, or output path bumps the major version).
   `.gitignore` and symlinks shared agent assets (`skills/`,
   `subagents/`) into `.claude/` and `.opencode/`.
 
+[Unreleased]: https://github.com/grAItools/harness-copier-template/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/grAItools/harness-copier-template/releases/tag/v0.2.0
 [0.1.0]: https://github.com/grAItools/harness-copier-template/releases/tag/v0.1.0

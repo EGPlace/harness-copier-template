@@ -12,7 +12,8 @@
 - Language: **{{ primary_language }}**
 - Package / build manager: **{{ package_manager }}**
 - License: {{ license }}
-- Tool versions live in `.tool-versions` / `mise.toml` (single source of truth)
+- Tool versions, install steps, and new-machine setup:
+  see [`docs/tool-bootstrap.md`](docs/tool-bootstrap.md).
 
 ## Commands (prefer these over guessing)
 
@@ -63,7 +64,19 @@ For Claude Code users:
 
 - Code style: see `docs/style.md`. One worked example > a page of prose.
 - Tests are the spec. If you change behaviour, change a test first.
-- Commit messages: imperative mood, first line ≤72 chars, no trailing period.
+{%- if commit_convention == 'conventional' %}
+- Commit messages: **Conventional Commits 1.0.0**
+{%- if pr_merge_strategy == 'squash' %} — apply the format to the **PR title** (squash-merge){% endif %}
+{%- if pr_merge_strategy == 'merge' %} — apply the format to every branch commit *and* the merge commit{% endif %}
+{%- if pr_merge_strategy == 'rebase' %} — apply the format to every branch commit (rebase-merge){% endif %}
+{%- if pr_merge_strategy not in ('squash', 'merge', 'rebase') %} — where it applies depends on the repo's merge strategy (squash → PR title; merge or rebase → every branch commit){% endif %}.
+  See [`docs/style.md`](docs/style.md#commit-messages) for the format,
+  type list, breaking-change syntax, examples, and full merge-strategy
+  guidance.
+{%- else %}
+- Commit messages: imperative mood, first line ≤72 chars, no trailing
+  period. See [`docs/style.md`](docs/style.md#commit-messages) for details.
+{%- endif %}
 - Branch names: `<initials>/<slug>` for personal branches; bare slug for
   shared feature branches.
 
