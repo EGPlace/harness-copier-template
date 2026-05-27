@@ -34,8 +34,10 @@ this file.
 ## Do
 
 - Run `{{ cmd('verify') }}` before claiming a task is done.
-- For a net-new feature, create `specs/<YYYY-MM>-<slug>/` and write `spec.md`
-  and `plan.md` **before** writing code. See `.agents/commands/spec.md`.
+- For a net-new feature, follow the four-phase loop:
+  `/spec` (Product Owner) → `/plan` (Architect) → `/build` (Developer)
+  → `/verify` (Reviewer). Each phase stops for review before the next
+  begins. See `.agents/commands/` and `.agents/subagents/`.
 - For a new architectural choice (dependency, framework, persistence, auth),
   add an ADR in `docs/adr/`. ADRs are append-only; supersede with a new file.
 - When investigating a large codebase, prefer the `explorer` subagent (read-only)

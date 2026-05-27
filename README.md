@@ -5,7 +5,26 @@ A [Copier](https://copier.readthedocs.io/) template that scaffolds an
 respected sources as of mid-2026. The harness is an `AGENTS.md`-rooted
 repository layout with a thin Claude Code + OpenCode overlay enabled by
 default, and everything else (Cursor, GitHub Copilot, MCP, example
-ADR/skill/subagent, Claude hooks) opt-in.
+ADR/skill, Claude hooks) opt-in.
+
+The harness ships a four-phase, role-based workflow — **Product Owner**
+(`/spec`) → **Architect** (`/plan`) → **Developer** (`/build`) →
+**Reviewer** (`/verify`) — with one subagent definition per role under
+`.agents/subagents/`. Each phase stops for user review before the next
+begins, and each role declares a tool allowlist that frames its
+intended scope: PO and Architect get `Read`/`Grep`/`Glob`/`Write` and
+are instructed to write only under `specs/`; Developer gets full
+`Read`/`Write`/`Edit`/`Grep`/`Glob`/`Bash`; Reviewer drops `Write`/`Edit`
+and is instructed to run only read-only commands plus the verify
+gate. Each role file carries both a Claude Code `tools:` allowlist and an
+OpenCode `permission:` map, so the kind of action (read/write/edit/
+bash) is tool-enforced in both surfaces. Path scoping inside `specs/`
+for PO/Architect is by instruction, not enforcement — neither
+`tools:` nor `permission:` supports per-path restrictions for
+`Write` — so a misbehaving model could still write outside `specs/`. The pattern
+follows the role-handoff conventions used by MetaGPT, BMAD Method,
+GitHub Spec Kit, and CrewAI, normalised to the `AGENTS.md` + `.agents/`
+layout this template already uses.
 
 ## What it generates
 
@@ -28,8 +47,13 @@ your-repo/
 │  └─ fmt-file.sh                    # per-file formatter slot for the PostToolUse hook
 ├─ .agents/                          # vendor-neutral shared assets
 │  ├─ skills/verify/SKILL.md         # if include_example_skill
-│  ├─ subagents/explorer.md          # if include_example_subagent
-│  └─ commands/{spec,plan,verify}.md
+│  ├─ subagents/
+│  │  ├─ product-owner.md            # paired with /spec
+│  │  ├─ architect.md                # paired with /plan
+│  │  ├─ developer.md                # paired with /build
+│  │  ├─ reviewer.md                 # paired with /verify
+│  │  └─ explorer.md                 # read-only investigation helper
+│  └─ commands/{spec,plan,build,verify}.md
 ├─ .claude/                          # Claude Code (always)
 │  ├─ settings.json                  # permissions (+ hooks if opted in)
 │  ├─ commands/  -> ../.agents/commands       (symlink, post-gen)
@@ -80,7 +104,6 @@ The template asks you:
 | `mcp`                     | Off by default                                           |
 | `include_example_adr`     | On                                                       |
 | `include_example_skill`   | On                                                       |
-| `include_example_subagent`| On                                                       |
 | `include_claude_hooks`    | On                                                       |
 | `include_example_spec`    | Off by default                                           |
 

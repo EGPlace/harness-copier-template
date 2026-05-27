@@ -336,11 +336,6 @@ include_example_skill:
   help: "Include the example 'verify' skill under .agents/skills/verify/?"
   default: true
 
-include_example_subagent:
-  type: bool
-  help: "Include the example 'explorer' read-only subagent?"
-  default: true
-
 include_claude_hooks:
   type: bool
   help: |

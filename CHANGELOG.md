@@ -11,9 +11,41 @@ name, default, or output path bumps the major version).
 _Target version: 0.3.0. Not yet tagged — further PRs may land here
 before the release._
 
+> **Maintainer note:** the Unreleased section already contains two
+> entries under `### Removed (breaking)` (the `package_manager`
+> choice narrowing and the `include_example_subagent` question
+> removal). Per the SemVer policy stated above ("a breaking change
+> to a question name, default, or output path bumps the major
+> version"), removing a question name technically warrants a
+> major-version bump (i.e. `1.0.0`) rather than the current
+> `0.3.0` target. Decide before tagging whether to retarget this
+> release or update the policy to reflect pre-1.0 minor-bump
+> conventions.
+
 
 ### Added
 
+- **Role-based subagents and `/build` command.** The harness now ships
+  four role subagents under `.agents/subagents/` — `product-owner`,
+  `architect`, `developer`, `reviewer` — paired 1:1 with the slash
+  commands. New `/build` command for the implementation phase
+  (Developer role). Existing `/spec`, `/plan`, `/verify` commands now
+  delegate to their role subagent. Each role declares a tool
+  allowlist matching its scope, expressed in **both** the Claude Code
+  `tools:` field and the OpenCode `permission:` map so the boundary
+  is tool-enforced on both surfaces: PO/Architect get
+  `Read`/`Grep`/`Glob`/`Write` (no edit, no bash) and are
+  *instructed* to write only under `specs/` (the path boundary is by
+  prompt, not by tool permissions — neither `tools:` nor
+  `permission:` is path-scoped); Developer gets full
+  `Read`/`Write`/`Edit`/`Grep`/`Glob`/`Bash`; Reviewer drops
+  `Write`/`Edit` entirely (a hard, tool-level guarantee against
+  auto-fixing in both Claude Code and OpenCode) and pins its
+  `bash:` map to the verify gate plus canonical read-only inspection
+  commands with a catch-all `"*": deny` (same shape used for
+  `explorer`). Pattern follows MetaGPT, BMAD Method, GitHub Spec
+  Kit, and CrewAI conventions. See
+  [`docs/decisions/0003-role-based-subagents-and-build-command.md`](docs/decisions/0003-role-based-subagents-and-build-command.md).
 - New question **`commit_convention`** (`conventional` | `freeform`,
   default `conventional`) — surfaces Conventional Commits 1.0.0
   guidance in `docs/style.md` and a pointer in `AGENTS.md`.
@@ -34,6 +66,14 @@ before the release._
 
 ### Removed (breaking)
 
+- `include_example_subagent` Copier question. The `explorer` subagent
+  it used to gate is now always generated, because the Developer
+  role's working loop relies on `explorer` being present.
+  Brownfield repos that previously generated with
+  `include_example_subagent: false` will get `.agents/subagents/explorer.md`
+  added on their next `copier update`. Saved answers files still
+  containing `include_example_subagent: …` can keep the key (Copier
+  ignores unknown answers) or remove it by hand.
 - `package_manager` choices narrowed from 21 options to a curated set:
   `uv` (Python), `pixi` (conda-ecosystem), `cmake` (C/C++), and
   `other`. Removed: `pip`, `poetry`, `pdm`, `hatch`, `conda`, `pnpm`,
