@@ -14,6 +14,15 @@ before the release._
 
 ### Added
 
+- New question **`copilot_review_loop`** (bool, default `false`) —
+  generates the `/babysit-copilot-review` slash command (under
+  `.agents/commands/`, surfaced to Claude Code + OpenCode via the
+  existing symlinks), the stdlib-only Python driver at
+  `scripts/babysit_copilot_review.py`, and two POSIX-sh helpers
+  (`gh_resolve_thread.sh`, `gh_rerequest_copilot.sh`) that wrap the
+  GraphQL mutations the public REST API can't reach. Includes an
+  operator guide at `docs/babysit-copilot-review.md`
+  (`_skip_if_exists`-protected). The loop never auto-merges.
 - New question **`commit_convention`** (`conventional` | `freeform`,
   default `conventional`) — surfaces Conventional Commits 1.0.0
   guidance in `docs/style.md` and a pointer in `AGENTS.md`.
