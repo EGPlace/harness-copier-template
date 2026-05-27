@@ -1,0 +1,535 @@
+#!/usr/bin/env python3
+"""
+babysit_copilot_review.py — deterministic plumbing for the
+`/babysit-copilot-review` slash command.
+
+The slash command drives the *judgement* loop (read comments, decide
+fix/dismiss/escalate, edit files, run the verify gate, commit, push).
+This script handles the I/O the agent should not re-derive on every
+turn: PR resolution, Copilot review triggering, polling, comment
+filtering, and state hand-off.
+
+Bot-identity filter rule
+------------------------
+Copilot review submissions show up as a `PullRequestReview` whose
+`user.login` starts with ``copilot-pull-request-reviewer`` (the bot is
+``copilot-pull-request-reviewer[bot]``; matching as a lowercased prefix
+tolerates suffix changes). We do **not** filter on `authorAssociation`:
+Copilot reviews come back as ``authorAssociation == "NONE"`` rather
+than ``BOT``, so any watcher that filters on association silently
+drops every Copilot review. (This is the bug tracked in
+openai/codex#19148; we deliberately do not have it.)
+
+Re-request limitation and GraphQL workaround
+--------------------------------------------
+The REST endpoint ``POST /pulls/{n}/requested_reviewers`` and the
+equivalent ``gh pr edit --add-reviewer @copilot`` are no-ops once
+Copilot has already submitted a review on the PR. To re-trigger after
+the first iteration, we use the GraphQL ``requestReviews(botIds:)``
+mutation, which does accept a bot node ID and forces a fresh review.
+The bot ID is discovered once per repo via a small reviews-query and
+cached under ``~/.cache/babysit-copilot-review/bot-ids.json``.
+
+Stdlib only by design (no `requests`, no `gh` Python bindings) so the
+script can run in a freshly cloned repo without `pip install`.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
+COPILOT_LOGIN_PREFIX = "copilot-pull-request-reviewer"
+CACHE_DIR = Path(os.path.expanduser("~/.cache/babysit-copilot-review"))
+BOT_ID_CACHE = CACHE_DIR / "bot-ids.json"
+
+
+# ---------------------------------------------------------------------------
+# Subprocess helpers
+# ---------------------------------------------------------------------------
+
+class GhError(RuntimeError):
+    pass
+
+
+def _run(cmd: list[str], *, check: bool = True, capture: bool = True,
+         input_data: str | None = None) -> subprocess.CompletedProcess[str]:
+    try:
+        return subprocess.run(
+            cmd,
+            check=check,
+            text=True,
+            capture_output=capture,
+            input=input_data,
+        )
+    except FileNotFoundError as e:
+        raise GhError(f"required command not found: {cmd[0]}") from e
+
+
+def _gh_json(args: list[str]) -> Any:
+    res = _run(["gh", *args], check=False)
+    if res.returncode != 0:
+        raise GhError(f"gh {' '.join(args)} failed: {res.stderr.strip()}")
+    out = res.stdout.strip()
+    if not out:
+        return None
+    return json.loads(out)
+
+
+# ---------------------------------------------------------------------------
+# Prechecks
+# ---------------------------------------------------------------------------
+
+def _ensure_gh() -> None:
+    if shutil.which("gh") is None:
+        print("error: `gh` not found on PATH; install GitHub CLI >= 2.88.0",
+              file=sys.stderr)
+        sys.exit(2)
+    res = _run(["gh", "auth", "status"], check=False)
+    if res.returncode != 0:
+        print("error: `gh auth status` failed; run `gh auth login` first",
+              file=sys.stderr)
+        sys.exit(2)
+
+
+def _resolve_pr(pr_arg: str) -> int:
+    if pr_arg != "auto":
+        try:
+            return int(pr_arg)
+        except ValueError:
+            print(f"error: --pr must be an integer or 'auto', got: {pr_arg!r}",
+                  file=sys.stderr)
+            sys.exit(2)
+    res = _run(["gh", "pr", "view", "--json", "number", "-q", ".number"],
+               check=False)
+    if res.returncode != 0 or not res.stdout.strip():
+        print("error: no open PR for HEAD; open one with `gh pr create` first",
+              file=sys.stderr)
+        sys.exit(3)
+    return int(res.stdout.strip())
+
+
+def _resolve_owner_repo() -> tuple[str, str]:
+    data = _gh_json(["repo", "view", "--json", "owner,name"])
+    return data["owner"]["login"], data["name"]
+
+
+# ---------------------------------------------------------------------------
+# Review state queries
+# ---------------------------------------------------------------------------
+
+PR_VIEW_FIELDS = "reviews,reviewThreads,headRefOid,updatedAt,statusCheckRollup,headRepository,headRepositoryOwner,isCrossRepository"
+
+
+def _fetch_pr_state(pr: int) -> dict[str, Any]:
+    return _gh_json(["pr", "view", str(pr), "--json", PR_VIEW_FIELDS])
+
+
+def _latest_copilot_review(reviews: list[dict[str, Any]], head_sha: str,
+                           last_review_id: int) -> dict[str, Any] | None:
+    """Return the newest Copilot review on `head_sha` strictly newer than
+    `last_review_id`, or None."""
+    best: dict[str, Any] | None = None
+    for r in reviews or []:
+        user = (r.get("author") or r.get("user") or {})
+        login = (user.get("login") or "").lower()
+        if not login.startswith(COPILOT_LOGIN_PREFIX):
+            continue
+        commit_id = r.get("commit_id") or r.get("commitId") or ""
+        if commit_id != head_sha:
+            continue
+        rid = int(r.get("id") or r.get("databaseId") or 0)
+        if rid <= last_review_id:
+            continue
+        if best is None or rid > int(best.get("id") or best.get("databaseId") or 0):
+            r["_normalized_id"] = rid
+            best = r
+    return best
+
+
+def _fetch_review_comments(pr: int) -> list[dict[str, Any]]:
+    """Fetch raw review comments via REST so we get `commit_id` (which
+    `gh pr view --json reviews` does not expose per-comment)."""
+    owner, repo = _resolve_owner_repo()
+    out = _gh_json([
+        "api", f"repos/{owner}/{repo}/pulls/{pr}/comments",
+        "--paginate",
+    ])
+    return out or []
+
+
+def _new_inline_comments(all_comments: list[dict[str, Any]],
+                         head_sha: str,
+                         last_review_id: int) -> list[dict[str, Any]]:
+    """Filter to Copilot inline comments on the current HEAD that belong
+    to a review newer than `last_review_id`."""
+    out: list[dict[str, Any]] = []
+    for c in all_comments:
+        user = c.get("user") or {}
+        login = (user.get("login") or "").lower()
+        if not login.startswith(COPILOT_LOGIN_PREFIX):
+            continue
+        if c.get("commit_id") != head_sha:
+            continue
+        prr_id = int(c.get("pull_request_review_id") or 0)
+        if prr_id <= last_review_id:
+            continue
+        out.append({
+            "id": c.get("id"),
+            "review_id": prr_id,
+            "path": c.get("path"),
+            "line": c.get("line") or c.get("original_line"),
+            "body": c.get("body"),
+            "commit_id": c.get("commit_id"),
+            "node_id": c.get("node_id"),
+        })
+    return out
+
+
+def _open_threads(state: dict[str, Any]) -> list[dict[str, Any]]:
+    threads = state.get("reviewThreads") or []
+    out = []
+    for t in threads:
+        if t.get("isResolved"):
+            continue
+        first = (t.get("comments") or [{}])[0]
+        out.append({
+            "id": t.get("id"),
+            "path": first.get("path"),
+            "line": first.get("line"),
+            "is_resolved": bool(t.get("isResolved")),
+        })
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Trigger / re-trigger
+# ---------------------------------------------------------------------------
+
+def _request_initial_review(pr: int, *, dry_run: bool) -> None:
+    cmd = ["gh", "pr", "edit", str(pr), "--add-reviewer", "@copilot"]
+    if dry_run:
+        print(f"[dry-run] {' '.join(cmd)}", file=sys.stderr)
+        return
+    res = _run(cmd, check=False)
+    # Non-zero is fine here: gh returns non-zero if Copilot is already a
+    # requested reviewer. Surface stderr at debug level only.
+    if res.returncode != 0:
+        print(f"note: `gh pr edit --add-reviewer @copilot` exit={res.returncode}: "
+              f"{res.stderr.strip()}", file=sys.stderr)
+
+
+def _load_bot_id(owner: str, repo: str) -> str | None:
+    if not BOT_ID_CACHE.exists():
+        return None
+    try:
+        data = json.loads(BOT_ID_CACHE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data.get(f"{owner}/{repo}")
+
+
+def _save_bot_id(owner: str, repo: str, bot_id: str) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    data: dict[str, str] = {}
+    if BOT_ID_CACHE.exists():
+        try:
+            data = json.loads(BOT_ID_CACHE.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            data = {}
+    data[f"{owner}/{repo}"] = bot_id
+    BOT_ID_CACHE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def _discover_bot_id(owner: str, repo: str, pr: int) -> str | None:
+    """Return the Copilot bot's GraphQL node ID, or None if not found."""
+    cached = _load_bot_id(owner, repo)
+    if cached:
+        return cached
+    query = """
+    query($owner:String!, $repo:String!, $pr:Int!) {
+      repository(owner:$owner, name:$repo) {
+        pullRequest(number:$pr) {
+          reviews(first:50) {
+            nodes {
+              author {
+                __typename
+                login
+                ... on Bot { id }
+              }
+            }
+          }
+        }
+      }
+    }
+    """
+    res = _run([
+        "gh", "api", "graphql",
+        "-f", f"query={query}",
+        "-F", f"owner={owner}",
+        "-F", f"repo={repo}",
+        "-F", f"pr={pr}",
+    ], check=False)
+    if res.returncode != 0:
+        return None
+    try:
+        payload = json.loads(res.stdout)
+    except json.JSONDecodeError:
+        return None
+    nodes = (((payload.get("data") or {}).get("repository") or {})
+             .get("pullRequest") or {}).get("reviews", {}).get("nodes", []) or []
+    for n in nodes:
+        author = n.get("author") or {}
+        if author.get("__typename") != "Bot":
+            continue
+        login = (author.get("login") or "").lower()
+        if login.startswith(COPILOT_LOGIN_PREFIX) and author.get("id"):
+            bot_id = author["id"]
+            _save_bot_id(owner, repo, bot_id)
+            return bot_id
+    return None
+
+
+def _rerequest_via_graphql(owner: str, repo: str, pr: int, *,
+                           dry_run: bool) -> bool:
+    bot_id = _discover_bot_id(owner, repo, pr)
+    if not bot_id:
+        print("warn: could not discover Copilot bot ID; falling back to "
+              "`gh pr edit --add-reviewer @copilot`", file=sys.stderr)
+        _request_initial_review(pr, dry_run=dry_run)
+        return False
+    # Look up the PR node ID via GraphQL — we need it for requestReviews.
+    pr_node = _gh_json(["pr", "view", str(pr), "--json", "id", "-q", ".id"])
+    pr_node_id = pr_node if isinstance(pr_node, str) else None
+    if not pr_node_id:
+        print("warn: could not resolve PR node id", file=sys.stderr)
+        return False
+    mutation = """
+    mutation($pr:ID!, $bots:[ID!]!) {
+      requestReviews(input:{pullRequestId:$pr, botIds:$bots, union:true}) {
+        pullRequest { number }
+      }
+    }
+    """
+    cmd = [
+        "gh", "api", "graphql",
+        "-f", f"query={mutation}",
+        "-F", f"pr={pr_node_id}",
+        "-F", f"bots[]={bot_id}",
+    ]
+    if dry_run:
+        print(f"[dry-run] {' '.join(cmd)}", file=sys.stderr)
+        return True
+    res = _run(cmd, check=False)
+    if res.returncode != 0:
+        print(f"warn: GraphQL requestReviews failed: {res.stderr.strip()}",
+              file=sys.stderr)
+        return False
+    return True
+
+
+# ---------------------------------------------------------------------------
+# Wait loop
+# ---------------------------------------------------------------------------
+
+def _wait_for_review(pr: int, head_sha: str, last_review_id: int, *,
+                     max_wait_s: int, event_timeout_s: int,
+                     dry_run: bool) -> dict[str, Any]:
+    """Poll until a fresh Copilot review for `head_sha` arrives, or raise."""
+    if dry_run:
+        print(f"[dry-run] would wait up to {max_wait_s}s for Copilot review "
+              f"on {head_sha[:8]} newer than id={last_review_id}",
+              file=sys.stderr)
+        return {"_normalized_id": last_review_id + 1, "commit_id": head_sha}
+    start = time.monotonic()
+    backoff = 60
+    phase = "passive"
+    while True:
+        elapsed = time.monotonic() - start
+        if elapsed >= max_wait_s:
+            print(f"error: no Copilot review within wait cap "
+                  f"({max_wait_s}s, head={head_sha[:8]}); "
+                  f"check `gh pr checks` and `gh pr view --web`",
+                  file=sys.stderr)
+            sys.exit(4)
+        if phase == "passive" and elapsed >= event_timeout_s:
+            phase = "active"
+        state = _fetch_pr_state(pr)
+        new_head = state.get("headRefOid") or head_sha
+        if new_head != head_sha:
+            print(f"note: HEAD advanced during wait "
+                  f"({head_sha[:8]} -> {new_head[:8]}); resetting",
+                  file=sys.stderr)
+            head_sha = new_head
+        review = _latest_copilot_review(state.get("reviews") or [],
+                                        head_sha, last_review_id)
+        if review:
+            return review
+        sleep_s = 30 if phase == "passive" else backoff
+        print(f"[{phase}] no Copilot review yet on {head_sha[:8]} "
+              f"(elapsed {int(elapsed)}s); sleeping {sleep_s}s",
+              file=sys.stderr)
+        time.sleep(sleep_s)
+        if phase == "active":
+            backoff = min(backoff * 2, 3600)
+
+
+# ---------------------------------------------------------------------------
+# Infinite-loop guard
+# ---------------------------------------------------------------------------
+
+_BODY_NORMALIZER = re.compile(r"\s+")
+
+
+def _seen_cache_path(pr: int) -> Path:
+    return CACHE_DIR / f"seen-comments-{pr}.json"
+
+
+def _load_seen(pr: int) -> dict[str, list[str]]:
+    p = _seen_cache_path(pr)
+    if not p.exists():
+        return {}
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _save_seen(pr: int, seen: dict[str, list[str]]) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    _seen_cache_path(pr).write_text(json.dumps(seen, indent=2), encoding="utf-8")
+
+
+def _check_infinite_loop(pr: int, comments: list[dict[str, Any]],
+                         head_sha: str) -> None:
+    """Track normalized comment bodies seen on each SHA. If the same body
+    appears on two different SHAs in the same session, bail out."""
+    seen = _load_seen(pr)
+    for c in comments:
+        body = c.get("body") or ""
+        key = _BODY_NORMALIZER.sub(" ", body.strip()).lower()[:500]
+        if not key:
+            continue
+        shas = seen.setdefault(key, [])
+        if shas and head_sha not in shas:
+            print(f"error: comment body repeated across SHAs "
+                  f"({shas[0][:8]} -> {head_sha[:8]}); possible "
+                  f"infinite loop; stopping. Body snippet: {key[:120]!r}",
+                  file=sys.stderr)
+            sys.exit(5)
+        if head_sha not in shas:
+            shas.append(head_sha)
+    _save_seen(pr, seen)
+
+
+# ---------------------------------------------------------------------------
+# CLI entry
+# ---------------------------------------------------------------------------
+
+def _emit_state(pr: int, owner: str, repo: str, state: dict[str, Any],
+                review: dict[str, Any], iteration: int) -> None:
+    head_sha = state.get("headRefOid") or ""
+    last_review_id = int(review.get("_normalized_id")
+                         or review.get("id") or 0)
+    comments = _fetch_review_comments(pr)
+    new_comments = _new_inline_comments(
+        comments, head_sha,
+        last_review_id=int(os.environ.get("BABYSIT_PREV_REVIEW_ID", "0")),
+    )
+    _check_infinite_loop(pr, new_comments, head_sha)
+    snapshot = {
+        "pr": pr,
+        "head_sha": head_sha,
+        "owner": owner,
+        "repo": repo,
+        "last_copilot_review_id": last_review_id,
+        "is_cross_repository": bool(state.get("isCrossRepository")),
+        "head_repository_owner": (state.get("headRepositoryOwner") or {}).get("login"),
+        "open_threads": _open_threads(state),
+        "new_inline_comments": new_comments,
+        "iteration": iteration,
+    }
+    print(json.dumps(snapshot, indent=2))
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(
+        description=("Drive the GitHub Copilot code-review loop on a PR. "
+                     "Used by the /babysit-copilot-review slash command."),
+    )
+    p.add_argument("--pr", required=True,
+                   help="PR number, or 'auto' to resolve from current branch")
+    p.add_argument("--max-iterations", type=int, default=5,
+                   help="Soft cap consumed by the slash-command driver (default 5)")
+    p.add_argument("--max-wait-s", type=int, default=1200,
+                   help="Per-iteration hard cap for review arrival (default 1200)")
+    p.add_argument("--event-timeout-s", type=int, default=360,
+                   help="Switch from passive to active poll after this many seconds (default 360)")
+    p.add_argument("--emit-state", action="store_true",
+                   help="Trigger Copilot, wait for the first review, print JSON snapshot")
+    p.add_argument("--next-iteration", action="store_true",
+                   help="Re-trigger Copilot via GraphQL and wait for a review on the new HEAD")
+    p.add_argument("--iteration", type=int, default=1,
+                   help="Current iteration number, for the emitted state")
+    p.add_argument("--dry-run", action="store_true",
+                   help="Print actions without calling gh")
+    args = p.parse_args(argv)
+
+    if not args.emit_state and not args.next_iteration:
+        p.error("one of --emit-state or --next-iteration is required")
+
+    if not args.dry_run:
+        _ensure_gh()
+    pr = _resolve_pr(args.pr)
+    owner, repo = (("dry", "run") if args.dry_run
+                   else _resolve_owner_repo())
+
+    # Resolve HEAD + last-seen review id from environment / current state.
+    if args.dry_run:
+        head_sha = "dryrun" + "0" * 34
+        last_review_id = int(os.environ.get("BABYSIT_LAST_REVIEW_ID", "0"))
+    else:
+        state0 = _fetch_pr_state(pr)
+        head_sha = state0.get("headRefOid") or ""
+        last_review_id = int(os.environ.get("BABYSIT_LAST_REVIEW_ID", "0"))
+
+    if args.emit_state:
+        _request_initial_review(pr, dry_run=args.dry_run)
+    else:  # --next-iteration
+        _rerequest_via_graphql(owner, repo, pr, dry_run=args.dry_run)
+
+    review = _wait_for_review(
+        pr, head_sha, last_review_id,
+        max_wait_s=args.max_wait_s,
+        event_timeout_s=args.event_timeout_s,
+        dry_run=args.dry_run,
+    )
+
+    if args.dry_run:
+        snapshot = {
+            "pr": pr, "head_sha": head_sha, "owner": owner, "repo": repo,
+            "last_copilot_review_id": int(review.get("_normalized_id", 0)),
+            "open_threads": [], "new_inline_comments": [],
+            "iteration": args.iteration, "dry_run": True,
+        }
+        print(json.dumps(snapshot, indent=2))
+        return 0
+
+    state = _fetch_pr_state(pr)
+    _emit_state(pr, owner, repo, state, review, args.iteration)
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except GhError as e:
+        print(f"error: {e}", file=sys.stderr)
+        sys.exit(2)
