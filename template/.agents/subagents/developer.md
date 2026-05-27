@@ -46,8 +46,11 @@ phase boundary.
 - If you discover the plan is wrong or missing a phase, stop and hand
   back to the Architect with a 2-3 sentence note in `scratch.md`. Do
   not silently re-plan.
-- Prefer the `explorer` subagent (read-only) for wide searches over
-  loading large files into your own context.
+- For wide codebase searches, use your own `Read`/`Grep`/`Glob` tools.
+  If a search would benefit from a longer-context summarisation that
+  you cannot do inline, stop and hand back to the main agent with a
+  short note in `scratch.md` requesting an `explorer` pass — Claude
+  Code subagents cannot spawn other subagents.
 
 ## Working loop
 

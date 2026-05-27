@@ -10,7 +10,21 @@ permission:
   read: allow
   write: deny
   edit: deny
-  bash: allow
+  bash:
+    "rg *": allow
+    "grep *": allow
+    "ls *": allow
+    "find *": allow
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    "wc *": allow
+    "git status": allow
+    "git log*": allow
+    "git diff*": allow
+    "git blame*": allow
+    "git show*": allow
+    "*": deny
 model: inherit
 ---
 

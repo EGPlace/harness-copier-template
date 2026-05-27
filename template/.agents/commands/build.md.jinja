@@ -12,7 +12,12 @@ You are carrying out the implementation phase of a feature.
      `specs/`.
 2. Read `spec.md`, `plan.md`, and `tasks.md` in full. If `plan.md` is
    missing or empty, stop and tell the user to run `/plan` first.
-3. Delegate the work to the **developer** subagent
+3. If the plan touches an unfamiliar area of the codebase, run an
+   `explorer` subagent pass first to summarise the relevant code
+   paths, and put the summary in `scratch.md` for the Developer to
+   read. (The Developer is itself a subagent and cannot spawn the
+   `explorer` subagent on its own.)
+4. Delegate the work to the **developer** subagent
    (`.agents/subagents/developer.md`). It will:
    - Work one phase at a time, writing tests first where the plan
      calls for behaviour change.
@@ -20,7 +25,7 @@ You are carrying out the implementation phase of a feature.
    - Run `{{ cmd('verify') }}` at every phase boundary.
    - Stop at the end of each phase and hand off to `/verify`
      (Reviewer) before starting the next.
-4. When the developer reports a phase complete, **stop** and ask the
+5. When the developer reports a phase complete, **stop** and ask the
    user to run `/verify` before proceeding. Do not auto-start the
    next phase.
 

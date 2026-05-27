@@ -110,8 +110,12 @@ their next `copier update`.
   (read vs. write vs. edit vs. bash) is enforced at the tool level
   in both Claude Code and OpenCode. The Reviewer's `Write`/`Edit`
   denial is a true hard guarantee in both tools that the role
-  cannot auto-fix defects. The Developer's allowlist makes its full
-  edit scope explicit. The Product Owner and Architect get
+  cannot auto-fix defects, and its `bash:` map further restricts
+  shell execution to the verify gate and the canonical read-only
+  inspection commands (`rg`, `grep`, `ls`, `find`, `cat`, `head`,
+  `tail`, `wc`, `git log`/`diff`/`blame`/`show`/`status`) with a
+  catch-all `"*": deny`. The Developer's allowlist makes its full
+  edit + bash scope explicit. The Product Owner and Architect get
   read+write but no edit/bash, and are *instructed* (in the role
   prose) to write only under `specs/`. Note that neither Claude
   Code's `tools:` allowlist nor OpenCode's `permission:` map
@@ -149,6 +153,13 @@ their next `copier update`.
   command files. The `_skip_if_exists` list does not protect these
   files (by design — they are core agent surfaces), so users get a
   diff prompt per-file as usual.
+- Claude Code subagents cannot spawn other subagents (see
+  `docs/harness-engineering-2026-05.md:156`), so the Developer
+  cannot delegate wide searches to `explorer` directly. The `/build`
+  command compensates by running an `explorer` pass from the main
+  agent before invoking `developer`, and the Developer role file
+  documents the hand-back path (drop a note in `scratch.md`) when
+  exploration is needed mid-loop.
 - The `/spec` / `/plan` / `/verify` commands now indirect through
   their subagent. Users who liked having the full behavioural
   contract inline in the command file will need to read one extra

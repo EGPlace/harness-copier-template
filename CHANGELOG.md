@@ -29,7 +29,10 @@ before the release._
   `permission:` is path-scoped); Developer gets full
   `Read`/`Write`/`Edit`/`Grep`/`Glob`/`Bash`; Reviewer drops
   `Write`/`Edit` entirely (a hard, tool-level guarantee against
-  auto-fixing in both Claude Code and OpenCode). Pattern follows MetaGPT, BMAD Method, GitHub Spec
+  auto-fixing in both Claude Code and OpenCode) and pins its
+  `bash:` map to the verify gate plus canonical read-only inspection
+  commands with a catch-all `"*": deny` (same shape used for
+  `explorer`). Pattern follows MetaGPT, BMAD Method, GitHub Spec
   Kit, and CrewAI conventions. See
   [`docs/decisions/0003-role-based-subagents-and-build-command.md`](docs/decisions/0003-role-based-subagents-and-build-command.md).
 - New question **`commit_convention`** (`conventional` | `freeform`,
