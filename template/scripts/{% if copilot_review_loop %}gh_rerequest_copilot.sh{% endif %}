@@ -1,0 +1,73 @@
+#!/usr/bin/env sh
+# gh_rerequest_copilot.sh — re-request a GitHub Copilot code review on a PR.
+#
+# Usage: gh_rerequest_copilot.sh <OWNER> <REPO> <PR_NUMBER>
+#
+# Workaround for a real limitation of the public review-request API:
+# `POST /pulls/{n}/requested_reviewers` (and the equivalent
+# `gh pr edit --add-reviewer @copilot`) is a no-op once Copilot has
+# already submitted a review on the PR. The GraphQL `requestReviews`
+# mutation accepts `botIds:` and forces a fresh review.
+#
+# This shell helper exists for operators who want to drive the loop
+# manually without invoking the Python driver. The slash command's
+# Python driver also implements the same workaround.
+
+set -eu
+
+if [ $# -ne 3 ]; then
+  echo "usage: $(basename "$0") <OWNER> <REPO> <PR_NUMBER>" >&2
+  exit 64
+fi
+
+OWNER="$1"
+REPO="$2"
+PR="$3"
+
+BOT_ID=$(gh api graphql \
+  -f query='query($owner:String!, $repo:String!, $pr:Int!) {
+    repository(owner:$owner, name:$repo) {
+      pullRequest(number:$pr) {
+        reviews(first:50) {
+          nodes {
+            author {
+              __typename
+              login
+              ... on Bot { id }
+            }
+          }
+        }
+      }
+    }
+  }' \
+  -F owner="$OWNER" -F repo="$REPO" -F pr="$PR" \
+  --jq '[.data.repository.pullRequest.reviews.nodes[]
+         | select(.author.__typename == "Bot")
+         | select(.author.login | ascii_downcase
+                  | startswith("copilot-pull-request-reviewer"))
+         | .author.id][0] // empty')
+
+if [ -z "$BOT_ID" ]; then
+  echo "error: could not discover Copilot bot node id for $OWNER/$REPO#$PR." >&2
+  echo "  (Has Copilot submitted at least one review on this PR yet?" >&2
+  echo "   If not, use \`gh pr edit $PR --add-reviewer @copilot\` first.)" >&2
+  exit 1
+fi
+
+PR_NODE_ID=$(gh pr view "$PR" --json id --jq .id)
+if [ -z "$PR_NODE_ID" ]; then
+  echo "error: could not resolve PR node id for $OWNER/$REPO#$PR" >&2
+  exit 1
+fi
+
+gh api graphql \
+  -f query='mutation($pr:ID!, $bots:[ID!]!) {
+    requestReviews(input:{pullRequestId:$pr, botIds:$bots, union:true}) {
+      pullRequest { number }
+    }
+  }' \
+  -F pr="$PR_NODE_ID" \
+  -F "bots[]=$BOT_ID" \
+  >/dev/null
+
+echo "re-requested Copilot review on $OWNER/$REPO#$PR"

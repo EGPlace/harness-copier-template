@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+# gh_resolve_thread.sh — resolve a single PR review thread via GraphQL.
+#
+# Usage: gh_resolve_thread.sh <THREAD_NODE_ID>
+#
+# THREAD_NODE_ID is the GraphQL node id for a PullRequestReviewThread
+# (looks like `PRRT_xxx...`). The Python driver emits these inside
+# `open_threads[].id` for the slash command to consume.
+#
+# Token permissions required (the same ones the slash command's docs
+# call out under "Auth & permissions"):
+#   - Pull requests: read/write
+#   - Contents:      read/write   <-- needed by resolveReviewThread,
+#                                    cite GitHub Community discussion #44650
+#
+# Exits 0 on success, non-zero with gh's stderr on failure.
+
+set -eu
+
+if [ $# -ne 1 ] || [ -z "${1:-}" ]; then
+  echo "usage: $(basename "$0") <THREAD_NODE_ID>" >&2
+  exit 64
+fi
+
+THREAD_ID="$1"
+
+gh api graphql \
+  -f query='mutation($id:ID!) {
+    resolveReviewThread(input:{threadId:$id}) {
+      thread { id isResolved }
+    }
+  }' \
+  -F id="$THREAD_ID" \
+  >/dev/null
