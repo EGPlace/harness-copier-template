@@ -19,10 +19,15 @@ before the release._
   `architect`, `developer`, `reviewer` — paired 1:1 with the slash
   commands. New `/build` command for the implementation phase
   (Developer role). Existing `/spec`, `/plan`, `/verify` commands now
-  delegate to their role subagent. Each role has a tight tool
-  allowlist (PO/Architect write only to `specs/`, Developer gets full
-  edit + bash, Reviewer is read-only). Pattern follows MetaGPT, BMAD
-  Method, GitHub Spec Kit, and CrewAI conventions. See
+  delegate to their role subagent. Each role declares a tool
+  allowlist matching its scope: PO/Architect get
+  `Read`/`Grep`/`Glob`/`Write` and are *instructed* to write only
+  under `specs/` (the boundary is by prompt, not by tool permissions
+  — `tools:` is not path-scoped); Developer gets full
+  `Read`/`Write`/`Edit`/`Grep`/`Glob`/`Bash`; Reviewer drops
+  `Write`/`Edit` entirely (a hard, tool-level guarantee against
+  auto-fixing). Pattern follows MetaGPT, BMAD Method, GitHub Spec
+  Kit, and CrewAI conventions. See
   [`docs/decisions/0003-role-based-subagents-and-build-command.md`](docs/decisions/0003-role-based-subagents-and-build-command.md).
 - New question **`commit_convention`** (`conventional` | `freeform`,
   default `conventional`) — surfaces Conventional Commits 1.0.0
@@ -41,6 +46,17 @@ before the release._
   `_skip_if_exists` so brown-field repos keep their existing file.
 - `AGENTS.md` `## Stack` section gets a "New-machine setup" pointer to
   the new doc.
+
+### Changed (breaking)
+
+- `explorer` subagent is now always generated. The
+  `include_example_subagent` Copier question is **removed**; the
+  Developer role's working loop relies on `explorer` being present.
+  Brownfield repos that previously generated with
+  `include_example_subagent: false` will get `.agents/subagents/explorer.md`
+  added on their next `copier update`. Saved answers files still
+  containing `include_example_subagent: …` can keep the key (Copier
+  ignores unknown answers) or remove it by hand.
 
 ### Removed (breaking)
 

@@ -81,10 +81,20 @@ The role subagents ship **unconditionally** — no new Copier question.
 They are the canonical implementation of the slash commands the
 harness already promises; gating them would mean a user who turned
 the flag off would get commands that delegate to subagents that
-don't exist. The existing `include_example_subagent` flag continues
-to gate only `explorer.md`, which is genuinely an *example* of the
-subagent pattern (read-only investigation), not part of the core
-workflow.
+don't exist.
+
+The `explorer.md` subagent — previously gated by
+`include_example_subagent` — is also promoted to ship
+unconditionally, and the `include_example_subagent` question is
+removed from `copier.yml`. Rationale: the Developer role's working
+loop explicitly recommends delegating wide searches to `explorer`,
+so making it optional would introduce the same "command references a
+file that may not exist" hazard the role agents avoid. The
+read-only-investigation pattern that `explorer.md` illustrates is
+better learnt by reading the always-present file than by being
+optionally absent. Brownfield repos that previously generated with
+`include_example_subagent: false` will get `explorer.md` added on
+their next `copier update`.
 
 ## Consequences
 
@@ -94,10 +104,17 @@ workflow.
   Spec Kit, CrewAI). Users coming from any of those frameworks find
   the same role names, the same artifact handoffs, and the same
   stop-and-ask boundaries.
-- Tighter tool scoping per role. The Product Owner and Architect
-  cannot accidentally edit code; the Reviewer cannot accidentally
-  auto-fix defects; the Developer's tool allowlist makes its full
-  edit scope explicit.
+- Tighter tool scoping per role. The Reviewer's allowlist drops
+  `Write` and `Edit` entirely (a hard guarantee that the role cannot
+  auto-fix defects); the Developer's allowlist makes its full edit
+  scope explicit; the Product Owner and Architect get only
+  `Read`/`Grep`/`Glob`/`Write` and are *instructed* (in the role
+  prose) to write only under `specs/`. Note that neither Claude
+  Code's `tools:` allowlist nor OpenCode's `permission:` map
+  supports per-path restrictions for `Write`, so the
+  PO-/Architect-only-writes-to-`specs/` boundary is enforced by
+  prompt, not by tool permissions — a misbehaving model could still
+  write elsewhere.
 - Each role's behavioural contract lives in one place
   (`.agents/subagents/<role>.md`), not duplicated across command
   files and `AGENTS.md`. Future changes to a role's rules are a
