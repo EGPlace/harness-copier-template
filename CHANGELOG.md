@@ -20,13 +20,16 @@ before the release._
   commands. New `/build` command for the implementation phase
   (Developer role). Existing `/spec`, `/plan`, `/verify` commands now
   delegate to their role subagent. Each role declares a tool
-  allowlist matching its scope: PO/Architect get
-  `Read`/`Grep`/`Glob`/`Write` and are *instructed* to write only
-  under `specs/` (the boundary is by prompt, not by tool permissions
-  — `tools:` is not path-scoped); Developer gets full
+  allowlist matching its scope, expressed in **both** the Claude Code
+  `tools:` field and the OpenCode `permission:` map so the boundary
+  is tool-enforced on both surfaces: PO/Architect get
+  `Read`/`Grep`/`Glob`/`Write` (no edit, no bash) and are
+  *instructed* to write only under `specs/` (the path boundary is by
+  prompt, not by tool permissions — neither `tools:` nor
+  `permission:` is path-scoped); Developer gets full
   `Read`/`Write`/`Edit`/`Grep`/`Glob`/`Bash`; Reviewer drops
   `Write`/`Edit` entirely (a hard, tool-level guarantee against
-  auto-fixing). Pattern follows MetaGPT, BMAD Method, GitHub Spec
+  auto-fixing in both Claude Code and OpenCode). Pattern follows MetaGPT, BMAD Method, GitHub Spec
   Kit, and CrewAI conventions. See
   [`docs/decisions/0003-role-based-subagents-and-build-command.md`](docs/decisions/0003-role-based-subagents-and-build-command.md).
 - New question **`commit_convention`** (`conventional` | `freeform`,

@@ -6,6 +6,11 @@ description: |
   specs/<YYYY-MM>-<slug>/spec.md. Invoked by the /spec slash command.
   Stops before any planning or implementation begins.
 tools: Read, Grep, Glob, Write
+permission:
+  read: allow
+  write: allow
+  edit: deny
+  bash: deny
 model: inherit
 ---
 

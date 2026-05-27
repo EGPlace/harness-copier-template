@@ -16,10 +16,12 @@ intended scope: PO and Architect get `Read`/`Grep`/`Glob`/`Write` and
 are instructed to write only under `specs/`; Developer gets full
 `Read`/`Write`/`Edit`/`Grep`/`Glob`/`Bash`; Reviewer drops `Write`/`Edit`
 and is instructed to run only read-only commands plus the verify
-gate. Path scoping for PO/Architect is by instruction, not enforcement
-— neither Claude Code's `tools:` allowlist nor OpenCode's per-action
-`permission:` map supports per-path restrictions for the `Write` tool,
-so a misbehaving model could still write outside `specs/`. The pattern
+gate. Each role file carries both a Claude Code `tools:` allowlist and an
+OpenCode `permission:` map, so the kind of action (read/write/edit/
+bash) is tool-enforced in both surfaces. Path scoping inside `specs/`
+for PO/Architect is by instruction, not enforcement — neither
+`tools:` nor `permission:` supports per-path restrictions for
+`Write` — so a misbehaving model could still write outside `specs/`. The pattern
 follows the role-handoff conventions used by MetaGPT, BMAD Method,
 GitHub Spec Kit, and CrewAI, normalised to the `AGENTS.md` + `.agents/`
 layout this template already uses.

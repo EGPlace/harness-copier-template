@@ -104,11 +104,15 @@ their next `copier update`.
   Spec Kit, CrewAI). Users coming from any of those frameworks find
   the same role names, the same artifact handoffs, and the same
   stop-and-ask boundaries.
-- Tighter tool scoping per role. The Reviewer's allowlist drops
-  `Write` and `Edit` entirely (a hard guarantee that the role cannot
-  auto-fix defects); the Developer's allowlist makes its full edit
-  scope explicit; the Product Owner and Architect get only
-  `Read`/`Grep`/`Glob`/`Write` and are *instructed* (in the role
+- Tighter tool scoping per role, enforced on both target surfaces.
+  Each role file carries both a Claude Code `tools:` allowlist and
+  an OpenCode `permission:` map, so the **kind** of action available
+  (read vs. write vs. edit vs. bash) is enforced at the tool level
+  in both Claude Code and OpenCode. The Reviewer's `Write`/`Edit`
+  denial is a true hard guarantee in both tools that the role
+  cannot auto-fix defects. The Developer's allowlist makes its full
+  edit scope explicit. The Product Owner and Architect get
+  read+write but no edit/bash, and are *instructed* (in the role
   prose) to write only under `specs/`. Note that neither Claude
   Code's `tools:` allowlist nor OpenCode's `permission:` map
   supports per-path restrictions for `Write`, so the
@@ -122,9 +126,16 @@ their next `copier update`.
 - The build phase now has the same shape as the other three phases:
   a slash command, a role agent, an explicit handoff. The implicit
   "just do the work" gap is closed.
-- Frontmatter is restricted to fields both Claude Code and OpenCode
-  understand (`name`, `description`, `tools`, `model`), so one
-  subagent file works in both tools via the existing symlink layout.
+- Frontmatter carries both the Claude Code allowlist (`tools:`) and
+  the OpenCode permission map (`permission:` with `read`/`write`/
+  `edit`/`bash` allow/deny entries) alongside the shared
+  `name`/`description`/`model` keys. Each tool reads the field it
+  understands and ignores the other (Claude Code does not parse
+  `permission:`; OpenCode treats `tools:` as deprecated and uses
+  `permission:` — see `docs/harness-engineering-2026-05.md:175-194`).
+  This keeps a single subagent file working in both tools via the
+  existing symlink layout, while ensuring the Reviewer's `Write`/
+  `Edit` denial is enforced on both surfaces — not just Claude Code.
 
 **Negative.**
 

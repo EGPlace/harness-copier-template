@@ -6,6 +6,11 @@ description: |
   decisions and delivery steps. Invoked by the /plan slash command.
   Stops before any code is written.
 tools: Read, Grep, Glob, Write
+permission:
+  read: allow
+  write: allow
+  edit: deny
+  bash: deny
 model: inherit
 ---
 

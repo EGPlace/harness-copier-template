@@ -6,6 +6,11 @@ description: |
   verification gate, and decide whether the work is ready or needs
   another build pass. Invoked by the /verify slash command.
 tools: Read, Grep, Glob, Bash
+permission:
+  read: allow
+  write: deny
+  edit: deny
+  bash: allow
 model: inherit
 ---
 

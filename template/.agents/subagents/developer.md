@@ -6,6 +6,11 @@ description: |
   tasks.md in sync, run the verification gate, and stop at each phase
   boundary or at any blocker. Invoked by the /build slash command.
 tools: Read, Write, Edit, Grep, Glob, Bash
+permission:
+  read: allow
+  write: allow
+  edit: allow
+  bash: allow
 model: inherit
 ---
 

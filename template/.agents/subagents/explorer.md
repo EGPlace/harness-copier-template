@@ -6,6 +6,11 @@ description: |
   for feature W". Returns a focused, citation-rich summary — never edits
   files, never runs state-changing commands.
 tools: Read, Grep, Glob, Bash
+permission:
+  read: allow
+  write: deny
+  edit: deny
+  bash: allow
 model: inherit
 ---
 
