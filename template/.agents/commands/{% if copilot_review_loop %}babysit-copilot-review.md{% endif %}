@@ -1,0 +1,112 @@
+---
+description: Drive a GitHub Copilot code-review loop on a PR — request, address comments, push, re-trigger, stop on a clean review or iteration cap. Never auto-merges.
+argument-hint: <pr-number> (optional; defaults to the PR for the current branch)
+allowed-tools: Bash(python:*), Bash(./scripts/babysit_copilot_review.py:*), Bash(./scripts/gh_resolve_thread.sh:*), Bash(./scripts/gh_rerequest_copilot.sh:*), Bash(gh pr view:*), Bash(gh pr checks:*), Bash(gh api:*), Bash(git:*), Read, Edit, Write
+model: opus
+---
+
+You are driving a GitHub Copilot code-review loop on a single PR.
+
+# Boundaries
+
+- **Never** run `gh pr merge`. The loop stops when the review is clean
+  or capped; merge is a separate human decision.
+- **Refuse fork PRs.** If `is_cross_repository` in the JSON snapshot is
+  true, stop immediately and tell the user to run the loop locally on
+  an upstream branch — the bot identity / re-trigger path doesn't work
+  cleanly for fork PRs.
+- **Iteration cap: 5.** Hard stop, even if the review is still noisy.
+
+# Loop
+
+## Iteration 0 — bootstrap
+
+Run **once**:
+
+```sh
+python scripts/babysit_copilot_review.py --pr "${1:-auto}" --emit-state --iteration 1
+```
+
+Consume the JSON snapshot on stdout — treat it as the authoritative
+loop state. Do not re-derive `pr`, `head_sha`, `owner`, `repo`, or
+`last_copilot_review_id` from scratch on later turns. If
+`is_cross_repository` is true, abort with the message above.
+
+## Iteration N — address comments
+
+For each entry in `new_inline_comments`, triage into exactly one of:
+
+- **Fix** — the comment identifies a real defect or a clear improvement
+  whose change is small and uncontroversial. Examples: null deref,
+  off-by-one, missing `await`, error swallowed, hard-coded secret,
+  typo in a public identifier.
+- **Dismiss-and-resolve** — the comment is wrong, redundant with
+  another comment you're already addressing, or out-of-scope for this
+  PR (style nit the project doesn't enforce, suggestion to refactor an
+  untouched file, request for a test that already exists elsewhere).
+  Before resolving, **reply on the thread with a one-sentence
+  justification** so the resolution is auditable:
+  ```sh
+  gh api -X POST "/repos/$OWNER/$REPO/pulls/$PR/comments/$COMMENT_ID/replies" \
+    -f body="Dismissed: <one-sentence reason>."
+  ```
+  Then resolve:
+  ```sh
+  ./scripts/gh_resolve_thread.sh "$THREAD_ID"
+  ```
+- **Escalate** — the comment surfaces a question only the human can
+  answer (architectural disagreement, unclear product intent, conflict
+  with another stakeholder). Record the comment id and the question in
+  the final summary; do not edit the file, do not resolve the thread.
+
+For every **Fix**:
+
+1. Apply the smallest edit that addresses the comment.
+2. Run the project's `verify_command` (see `AGENTS.md` — usually
+   `make verify` / `just verify` / `./scripts/verify.sh`). Do not push
+   on a red verify.
+3. Stage and commit per the project's commit convention
+   (`docs/style.md`). Reference the comment ids you addressed in the
+   body, not the subject.
+
+After processing all comments for this iteration:
+
+- If at least one Fix landed: `git push`.
+- If escalations exist: stop the loop and write the final summary.
+- If only Dismissals landed (no Fix, no Escalate): you do not need to
+  push — go straight to the next iteration's re-trigger.
+
+## Re-trigger
+
+```sh
+BABYSIT_LAST_REVIEW_ID=<last_copilot_review_id from previous snapshot> \
+  python scripts/babysit_copilot_review.py \
+    --pr <pr> --next-iteration --iteration <N+1>
+```
+
+Consume the new snapshot. Loop back to "address comments".
+
+## Stop conditions
+
+Stop on **any** of these:
+
+1. `new_inline_comments` is empty on the current HEAD (clean review).
+2. Every comment was Dismiss-and-resolve and no Escalate (also clean).
+3. Any Escalate present.
+4. Iteration cap reached (`iteration == 5`).
+5. The driver script exited 5 (infinite-loop guard tripped — the same
+   comment body recurred across two SHAs in this session).
+6. The driver script exited 4 (no Copilot review within wait cap).
+
+# Final summary
+
+Write a concise message to the user with:
+
+- Iterations run.
+- Files touched (`git diff --stat <starting-sha>..HEAD`).
+- Counts: fixed / dismissed / escalated.
+- Each escalation: one line of context plus the comment id and URL.
+- Commit SHAs pushed (`git log --oneline <starting-sha>..HEAD`).
+- The PR's final `reviewDecision`
+  (`gh pr view --json reviewDecision -q .reviewDecision`).
+- Reminder: this loop never merges. The human decides next.
