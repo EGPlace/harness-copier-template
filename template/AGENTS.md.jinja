@@ -1,9 +1,7 @@
 # {{ project_name }} — Agent Instructions
 {%- from '_macros.jinja' import cmd, runner_file_name with context %}
 
-> README for agents. Read by Codex, OpenCode, Cursor, Amp, Factory, Gemini CLI,
-> GitHub Copilot, and (via the `@AGENTS.md` import in `CLAUDE.md`) Claude Code.
-> Closest AGENTS.md to the file being edited wins.
+> README for AI coding agents. Closest AGENTS.md to the file being edited wins.
 
 {{ project_description }}
 
@@ -20,7 +18,7 @@
 - `{{ cmd('test') }}` — fast unit tests{% if task_runner != 'none' %} (= `{{ test_command }}`){% endif %}
 - `{{ cmd('lint') }}` — static checks{% if task_runner != 'none' %} (= `{{ lint_command }}`){% endif %}
 - `{{ cmd('fmt') }}`  — auto-format{% if task_runner != 'none' %} (= `{{ fmt_command }}`){% endif %}
-- `{{ cmd('verify') }}` — full verification gate (what the Claude Code `Stop` hook runs)
+- `{{ cmd('verify') }}` — full verification gate
 
 If a command above is wrong for your environment, **fix the {{ runner_file_name() }}**, not
 this file.
@@ -32,12 +30,6 @@ this file.
 - Testing strategy: [`docs/testing.md`](docs/testing.md)
 - ADRs (decisions of record): [`docs/adr/`](docs/adr/)
 - Per-feature specs: [`specs/<YYYY-MM>-<slug>/`](specs/)
-
-For Claude Code users:
-
-- Skills: `.claude/skills/` (symlinked from `.agents/skills/`)
-- Subagents: `.claude/agents/` (symlinked from `.agents/subagents/`)
-- Slash commands: `.claude/commands/` (symlinked from `.agents/commands/`) — `/spec`, `/plan`, `/verify`
 
 ## Do
 
@@ -56,7 +48,7 @@ For Claude Code users:
 - Don't run destructive Git: `push --force`, `reset --hard origin/*`,
   history rewrites on shared branches.
 - Don't put secrets, hostnames, or per-developer paths in this file —
-  they belong in `CLAUDE.local.md` (gitignored).
+  they belong in a gitignored local config file.
 - Don't auto-generate or expand this file beyond ~200 lines. The instruction
   budget is finite; adding rules degrades adherence to *all* rules.
 
