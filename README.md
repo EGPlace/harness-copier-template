@@ -21,15 +21,19 @@ your-repo/
 │  ├─ style.md                        # greenfield: incl. commit-message convention
 │  ├─ testing.md
 │  ├─ tool-bootstrap.md               # per-package-manager install instructions
+│  ├─ babysit-copilot-review.md       # if copilot_review_loop — operator guide for the loop
 │  └─ adr/0001-record-architecture-decisions.md   # if include_example_adr
 ├─ specs/                            # per-feature; YYYY-MM-example/ if opted in
 ├─ scripts/                          # shell entry points (if generate_scripts)
 │  ├─ verify.sh                      # default implementation of verify_command (canonical lint+test gate)
-│  └─ fmt-file.sh                    # per-file formatter slot for the PostToolUse hook
+│  ├─ fmt-file.sh                    # per-file formatter slot for the PostToolUse hook
+│  ├─ babysit_copilot_review.py      # if copilot_review_loop — Python driver for /babysit-copilot-review
+│  ├─ gh_resolve_thread.sh           # if copilot_review_loop — GraphQL resolveReviewThread wrapper
+│  └─ gh_rerequest_copilot.sh        # if copilot_review_loop — GraphQL requestReviews(botIds:) wrapper
 ├─ .agents/                          # vendor-neutral shared assets
 │  ├─ skills/verify/SKILL.md         # if include_example_skill
 │  ├─ subagents/explorer.md          # if include_example_subagent
-│  └─ commands/{spec,plan,verify}.md
+│  └─ commands/{spec,plan,verify}.md # + babysit-copilot-review.md if copilot_review_loop
 ├─ .claude/                          # Claude Code (always)
 │  ├─ settings.json                  # permissions (+ hooks if opted in)
 │  ├─ commands/  -> ../.agents/commands       (symlink, post-gen)
@@ -77,6 +81,7 @@ The template asks you:
 | `pr_merge_strategy`       | `squash` (default) \| `merge` \| `rebase` \| `unknown`; tailors where the convention applies |
 | `cursor`                  | Off by default                                           |
 | `copilot`                 | Off by default                                           |
+| `copilot_review_loop`     | Off by default. Generates the `/babysit-copilot-review` slash command + supporting scripts that drive a GitHub Copilot review loop on a PR (request, address, push, re-trigger, stop; never auto-merges). Requires `gh` ≥ 2.88.0. |
 | `mcp`                     | Off by default                                           |
 | `include_example_adr`     | On                                                       |
 | `include_example_skill`   | On                                                       |
