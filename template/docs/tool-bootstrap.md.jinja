@@ -112,7 +112,10 @@ asdf current                   # show resolved versions
 ```
 
 Per-language version managers (`pyenv`, `nvm`, `rustup`, `rbenv`, …)
-also work — use the same versions listed in `.tool-versions`.
+also work — use the same versions you've recorded in your chosen pin
+file (`.tool-versions` or `mise.toml`); they typically read their own
+per-language pin files (`.python-version`, `.nvmrc`, …) so keep those
+in sync with the main pin file if you go this route.
 
 ## Verify the bootstrap
 
