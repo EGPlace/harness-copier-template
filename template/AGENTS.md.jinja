@@ -31,16 +31,6 @@ this file.
 - ADRs (decisions of record): [`docs/adr/`](docs/adr/)
 - Per-feature specs: [`specs/<YYYY-MM>-<slug>/`](specs/)
 
-{% if copilot_review_loop -%}
-## Copilot code-review loop
-
-Run `/babysit-copilot-review [pr-number]` to drive a GitHub Copilot
-code-review loop on a PR: request review, address comments, push,
-re-trigger, stop when clean. **Never auto-merges.** See
-[`docs/babysit-copilot-review.md`](docs/babysit-copilot-review.md) for
-prerequisites and required token permissions.
-
-{% endif -%}
 ## Do
 
 - Run `{{ cmd('verify') }}` before claiming a task is done.

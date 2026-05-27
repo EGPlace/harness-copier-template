@@ -35,7 +35,6 @@ _skip_if_exists:
   - "docs/style.md"
   - "docs/testing.md"
   - "docs/tool-bootstrap.md"
-  - "docs/babysit-copilot-review.md"
 
 # Optional post-generation tasks. The brown-field merger hook (see hooks/) runs
 # unconditionally and appends gitignore entries idempotently when an existing
@@ -396,12 +395,13 @@ _message_after_copy: |
   {% if copilot_review_loop -%}
   Note: copilot_review_loop=true generated `/babysit-copilot-review`
   and the supporting scripts under `scripts/`. Before using the
-  command, read `docs/babysit-copilot-review.md` for the required
-  GitHub App / fine-grained PAT permissions
-  (`Pull requests: read/write`, `Contents: read/write` — Contents
-  write is required by the GraphQL `resolveReviewThread` mutation)
-  and the recommended "Review new pushes" ruleset on your default
-  branch, which is the cleanest re-trigger mechanism (the bundled
-  GraphQL `requestReviews(botIds)` workaround is the fallback when
-  the ruleset is not configured).
+  command, configure your `gh` token with `Pull requests: read/write`
+  and `Contents: read/write` (the GraphQL `resolveReviewThread`
+  mutation needs Contents:write). The cleanest re-trigger mechanism
+  is the default-branch "Automatically request Copilot code review →
+  Review new pushes" ruleset; the bundled GraphQL
+  `requestReviews(botIds)` workaround is the fallback when the
+  ruleset is not configured. Full operator guide:
+  `docs/babysit-copilot-review.md` in the harness-copier-template
+  source repository.
   {%- endif %}

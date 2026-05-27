@@ -21,7 +21,6 @@ your-repo/
 │  ├─ style.md                        # greenfield: incl. commit-message convention
 │  ├─ testing.md
 │  ├─ tool-bootstrap.md               # per-package-manager install instructions
-│  ├─ babysit-copilot-review.md       # if copilot_review_loop — operator guide for the loop
 │  └─ adr/0001-record-architecture-decisions.md   # if include_example_adr
 ├─ specs/                            # per-feature; YYYY-MM-example/ if opted in
 ├─ scripts/                          # shell entry points (if generate_scripts or copilot_review_loop)
@@ -134,8 +133,10 @@ harness-copier-template/
 ├─ _macros.jinja      # Shared Jinja macros; lives at repo root so templates
 │                     # can `{% from '_macros.jinja' import ... %}` regardless
 │                     # of _subdirectory (the file itself never renders).
-├─ docs/
-│  └─ harness-engineering-2026-05.md  # Source report this template implements
+├─ docs/                              # Meta-docs about the harness itself
+│  ├─ harness-engineering-2026-05.md  # Source report this template implements
+│  ├─ babysit-copilot-review.md       # Operator guide for the `copilot_review_loop` feature
+│  └─ decisions/                      # ADRs about the template (e.g. why commands moved to .agents/)
 ├─ hooks/
 │  └─ post_gen.py     # Idempotent .gitignore merge + symlink creation
 ├─ template/          # _subdirectory = "template"; everything below is rendered

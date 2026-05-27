@@ -20,9 +20,12 @@ before the release._
   existing symlinks), the stdlib-only Python driver at
   `scripts/babysit_copilot_review.py`, and two POSIX-sh helpers
   (`gh_resolve_thread.sh`, `gh_rerequest_copilot.sh`) that wrap the
-  GraphQL mutations the public REST API can't reach. Includes an
-  operator guide at `docs/babysit-copilot-review.md`
-  (`_skip_if_exists`-protected). The loop never auto-merges.
+  GraphQL mutations the public REST API can't reach. The operator
+  guide lives at `docs/babysit-copilot-review.md` in the template
+  repository itself (alongside `harness-engineering-2026-05.md`) —
+  it is not rendered into generated projects, since it is meta-doc
+  about the harness feature rather than project documentation. The
+  loop never auto-merges.
 - New question **`commit_convention`** (`conventional` | `freeform`,
   default `conventional`) — surfaces Conventional Commits 1.0.0
   guidance in `docs/style.md` and a pointer in `AGENTS.md`.
