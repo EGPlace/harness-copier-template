@@ -28,10 +28,10 @@ Example:
 {% if commit_convention == 'conventional' -%}
 This project uses **[Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)**.
 
-Format: `<type>[optional scope]: <description>` — the entire
-`(scope)` segment (parentheses included) is optional, so a commit
-without one is just `<type>: <description>`. Description in
-imperative mood, no trailing period, first line ≤72 chars.
+Format: `<type>(<scope>): <description>` — the `(scope)` segment
+(parentheses included) is optional, so a commit without one is just
+`<type>: <description>`. Description in imperative mood, no trailing
+period, first line ≤72 chars.
 
 Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`,
 `build`, `ci`, `perf`, `style`, `revert`. Mark breaking changes with

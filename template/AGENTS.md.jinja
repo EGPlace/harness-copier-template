@@ -69,10 +69,10 @@ For Claude Code users:
 - Tests are the spec. If you change behaviour, change a test first.
 {%- if commit_convention == 'conventional' %}
 - Commit messages: **Conventional Commits 1.0.0** —
-  `<type>[optional scope]: <description>` (the entire `(scope)`
-  segment is optional, parentheses included; a no-scope commit is
-  just `<type>: <description>`). Imperative mood, ≤72-char first
-  line, no trailing period. Common types: `feat`, `fix`, `docs`,
+  `<type>(<scope>): <description>` (the `(scope)` segment —
+  parentheses included — is optional; a no-scope commit is just
+  `<type>: <description>`). Imperative mood, ≤72-char first line,
+  no trailing period. Common types: `feat`, `fix`, `docs`,
   `refactor`, `test`, `chore`, `build`, `ci`, `perf`, `style`,
   `revert`; mark breaking changes with `!` after the type/scope
   (e.g. `feat(api)!: …`) or a `BREAKING CHANGE:` footer.
