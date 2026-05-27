@@ -35,6 +35,7 @@ _skip_if_exists:
   - "docs/style.md"
   - "docs/testing.md"
   - "docs/tool-bootstrap.md"
+  - "docs/babysit-copilot-review.md"
 
 # Optional post-generation tasks. The brown-field merger hook (see hooks/) runs
 # unconditionally and appends gitignore entries idempotently when an existing
@@ -321,6 +322,22 @@ copilot:
   help: "Generate .github/copilot-instructions.md (one-line redirect to AGENTS.md)?"
   default: false
 
+copilot_review_loop:
+  type: bool
+  help: |
+    Generate the `/babysit-copilot-review` slash command and its
+    supporting scripts. The command drives a GitHub Copilot code-review
+    loop on a PR: request review, wait, address comments (fix /
+    dismiss-and-resolve / escalate), push, re-trigger; stop on a clean
+    review or iteration cap. Never auto-merges.
+
+    Requires `gh` (>= 2.88.0) on PATH and a GitHub repository with
+    Copilot Code Review available. Setting `copilot=true` to also
+    generate `.github/copilot-instructions.md` is recommended — Copilot
+    Code Review reads it from the base branch (first 4,000 chars) to
+    steer review focus.
+  default: false
+
 mcp:
   type: bool
   help: "Generate a starter .mcp.json (with example commented-out servers)?"
@@ -375,4 +392,15 @@ _message_after_copy: |
   the agent loop runs without prompts. To also allow related commands
   (e.g. other pixi/hatch tasks), add a broader wildcard entry to both
   config files manually.
+  {%- endif %}
+  {% if copilot_review_loop -%}
+  Note: copilot_review_loop=true generated `/babysit-copilot-review` and
+  the supporting scripts under `scripts/`. Before using the command, read
+  `docs/babysit-copilot-review.md` for the required GitHub App / fine-
+  grained PAT permissions (`Pull requests: read/write`, `Contents:
+  read/write` — Contents write is required by the GraphQL
+  `resolveReviewThread` mutation) and the recommended "Review new pushes"
+  ruleset on your default branch, which is the cleanest re-trigger
+  mechanism (the bundled GraphQL `requestReviews(botIds)` workaround is
+  the fallback when the ruleset is not configured).
   {%- endif %}
