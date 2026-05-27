@@ -68,7 +68,10 @@ lives in the subagent definition where it belongs.
 
 Concretely:
 
-- New: `template/.agents/subagents/{product-owner,architect,developer,reviewer}.md`.
+- New: `template/.agents/subagents/{product-owner,architect,developer}.md`
+  and `template/.agents/subagents/reviewer.md.jinja` (the reviewer
+  is templated to render the `cmd('verify')` macro into its
+  `permission.bash` allowlist).
 - New: `template/.agents/commands/build.md.jinja`.
 - Updated: `template/.agents/commands/{spec,plan,verify}.md.jinja`
   delegate to their role subagent.
@@ -202,7 +205,7 @@ their next `copier update`.
 - [`template/.agents/subagents/product-owner.md`](../../template/.agents/subagents/product-owner.md)
 - [`template/.agents/subagents/architect.md`](../../template/.agents/subagents/architect.md)
 - [`template/.agents/subagents/developer.md`](../../template/.agents/subagents/developer.md)
-- [`template/.agents/subagents/reviewer.md`](../../template/.agents/subagents/reviewer.md)
+- [`template/.agents/subagents/reviewer.md.jinja`](../../template/.agents/subagents/reviewer.md.jinja)
 - [`template/.agents/commands/build.md.jinja`](../../template/.agents/commands/build.md.jinja)
 - [ADR 0002](0002-canonicalize-commands-under-agents.md) — established
   `.agents/commands/` as the canonical source for slash commands; the

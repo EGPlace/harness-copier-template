@@ -12,7 +12,9 @@ permission:
   write: deny
   edit: deny
   bash:
-    "{{ cmd('verify') }}*": allow
+    {{ (cmd('verify') ~ '*') | tojson }}: allow
+    {{ (cmd('test') ~ '*') | tojson }}: allow
+    {{ (cmd('lint') ~ '*') | tojson }}: allow
     "rg *": allow
     "grep *": allow
     "ls *": allow
