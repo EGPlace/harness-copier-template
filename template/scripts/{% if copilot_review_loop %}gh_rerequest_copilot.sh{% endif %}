@@ -24,11 +24,14 @@ OWNER="$1"
 REPO="$2"
 PR="$3"
 
+# `last:100` (rather than `first:50`) so Copilot's most-recent review
+# stays in the window on PRs with many human reviews. 100 is the
+# GraphQL connection ceiling; full pagination is the only way past it.
 BOT_ID=$(gh api graphql \
   -f query='query($owner:String!, $repo:String!, $pr:Int!) {
     repository(owner:$owner, name:$repo) {
       pullRequest(number:$pr) {
-        reviews(first:50) {
+        reviews(last:100) {
           nodes {
             author {
               __typename

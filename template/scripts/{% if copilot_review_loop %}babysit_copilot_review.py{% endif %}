@@ -265,11 +265,17 @@ def _discover_bot_id(owner: str, repo: str, pr: int) -> str | None:
     cached = _load_bot_id(owner, repo)
     if cached:
         return cached
+    # `last:100` (rather than `first:50`) so PRs with many human
+    # reviews still surface Copilot's most-recent submission in the
+    # window. 100 is the GraphQL connection ceiling for this field;
+    # full pagination is the only way to go beyond it but the recent
+    # slice is what we want anyway — the bot id only needs to be
+    # discovered once and is then cached per-repo.
     query = """
     query($owner:String!, $repo:String!, $pr:Int!) {
       repository(owner:$owner, name:$repo) {
         pullRequest(number:$pr) {
-          reviews(first:50) {
+          reviews(last:100) {
             nodes {
               author {
                 __typename
@@ -408,6 +414,21 @@ def _seen_cache_path(pr: int) -> Path:
     return CACHE_DIR / f"seen-comments-{pr}.json"
 
 
+def _reset_seen(pr: int) -> None:
+    """Drop any persisted seen-comment cache for this PR. Called at the
+    start of every `--emit-state` invocation so the infinite-loop guard
+    is scoped to the current session, not the full history of all
+    previous runs. Without this, an operator who re-runs the loop on a
+    PR weeks later would trip exit 5 the moment they hit a comment that
+    was seen on a long-since-rewritten SHA."""
+    p = _seen_cache_path(pr)
+    if p.exists():
+        try:
+            p.unlink()
+        except OSError:
+            pass
+
+
 def _load_seen(pr: int) -> dict[str, list[str]]:
     p = _seen_cache_path(pr)
     if not p.exists():
@@ -521,6 +542,11 @@ def main(argv: list[str] | None = None) -> int:
         last_review_id = int(os.environ.get("BABYSIT_LAST_REVIEW_ID", "0"))
 
     if args.emit_state:
+        # New session — drop any stale infinite-loop cache from prior
+        # runs so we don't false-positive on a comment last seen weeks
+        # ago against a long-since-discarded SHA.
+        if not args.dry_run:
+            _reset_seen(pr)
         _request_initial_review(pr, dry_run=args.dry_run)
     else:  # --next-iteration
         _rerequest_via_graphql(owner, repo, pr, dry_run=args.dry_run)

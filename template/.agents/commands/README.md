@@ -1,8 +1,15 @@
 # Slash commands
 
 Cross-tool slash command definitions live here. Each command is a single
-Markdown file with YAML frontmatter (`description`, optional
-`argument-hint`).
+Markdown file with YAML frontmatter:
+
+- `description` — surfaced in the slash-command picker. Required.
+- `argument-hint` — placeholder shown after the command name. Optional.
+- `allowed-tools` — Claude Code permission allowlist for the command,
+  comma-separated. Optional; least-privilege wins. OpenCode ignores
+  unknown keys, so the single file is dual-harness safe.
+- `model` — pin the command to a specific model. Optional; same
+  dual-harness tolerance.
 
 The same files are read by Claude Code (symlinked at `.claude/commands/`) and
 OpenCode (symlinked at `.opencode/commands/`). The symlinks are created by the
