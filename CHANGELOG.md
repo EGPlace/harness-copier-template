@@ -8,20 +8,13 @@ name, default, or output path bumps the major version).
 
 ## [Unreleased]
 
-_Target version: 0.3.0. Not yet tagged — further PRs may land here
-before the release._
+### Added
 
-> **Maintainer note:** the Unreleased section already contains two
-> entries under `### Removed (breaking)` (the `package_manager`
-> choice narrowing and the `include_example_subagent` question
-> removal). Per the SemVer policy stated above ("a breaking change
-> to a question name, default, or output path bumps the major
-> version"), removing a question name technically warrants a
-> major-version bump (i.e. `1.0.0`) rather than the current
-> `0.3.0` target. Decide before tagging whether to retarget this
-> release or update the policy to reflect pre-1.0 minor-bump
-> conventions.
+### Changed
 
+### Removed
+
+## [0.3.0] – 2026-05-28
 
 ### Added
 
@@ -216,6 +209,7 @@ before the release._
   `.gitignore` and symlinks shared agent assets (`skills/`,
   `subagents/`) into `.claude/` and `.opencode/`.
 
-[Unreleased]: https://github.com/grAItools/harness-copier-template/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/grAItools/harness-copier-template/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/grAItools/harness-copier-template/releases/tag/v0.3.0
 [0.2.0]: https://github.com/grAItools/harness-copier-template/releases/tag/v0.2.0
 [0.1.0]: https://github.com/grAItools/harness-copier-template/releases/tag/v0.1.0
